@@ -13,12 +13,17 @@ import Html exposing (a)
 import List exposing (filter)
 import List exposing (concatMap)
 import Random exposing (initialSeed)
+import List exposing (length, filter)
+import Html exposing (a)
+import Random.Extra exposing (bool)
+import List exposing (concatMap)
+import List exposing (take)
+import List exposing (drop)
 import List exposing (head)
 
 
 
 -- CARD (Denne sektion definerer Card typen)
---test
 
 type Shape
     = Diamond
@@ -54,6 +59,30 @@ type alias Card =
 
 
 -- CONSTANTS (Her finder du "konstanter" eller eksempeldata, som du kan bruge til at tjekke dine funktioner med)
+
+genCardColor : Card -> List Card
+genCardColor card =
+    [{card | color = Red}
+    , {card | color = Green}
+    , {card | color = Purple}]
+
+genCardShape : Card -> List Card
+genCardShape card =
+    [{card | shape = Squiggle}
+    , {card | shape = Oval}
+    , {card | shape = Diamond}]
+
+genCardShading : Card -> List Card
+genCardShading card =
+    [{card | shading = Solid}
+    , {card | shading = Open}
+    , {card | shading = Striped}]
+
+genCardNumber : Card -> List Card
+genCardNumber card =
+    [{card | number = One}
+    , {card | number = Two}
+    , {card | number = Three}]
 
 
 exampleCard : Card
@@ -94,42 +123,20 @@ myTable =
 
 
 -- MODEL
-genCardColor : Card -> List Card
-genCardColor card =
-    [ {card | color = Red}
-    , {card | color = Purple}
-    , {card | color = Green}]
-
-genCardShape : Card -> List Card
-genCardShape card =
-    [ {card | shape = Oval}
-    , {card | shape = Squiggle}
-    , {card | shape = Diamond}]
-
-genCardShading : Card -> List Card
-genCardShading card =
-    [ {card | shading = Open}
-    , {card | shading = Striped}
-    , {card | shading = Solid}]
-
-genCardNumber : Card -> List Card
-genCardNumber card =
-    [ {card | number = One}
-    , {card | number = Two}
-    , {card | number = Three}]
 
 type alias Model =
-    { table : List Card
-    , selection : List Card
-    , besked : String
-    , cardPile : List Card
+    { table : List Card,
+    selection : List Card,
+    message : String,
+    cardPile : List Card
     }
+
 
 fullDeck : List Card
 fullDeck =
-    (concatMap genCardShape
-        (concatMap genCardShading
-        (concatMap genCardNumber 
+    (concatMap genCardNumber
+    (concatMap genCardShape 
+    (concatMap genCardShading 
     (genCardColor exampleCard))))
 
 
@@ -144,7 +151,7 @@ init : Model
 init =
     { table = List.take 12 (randomDeck 42)
     , selection = []
-    , besked = ""
+    , message = ""
     , cardPile = List.drop 12 (randomDeck 42)
     }
 
@@ -155,7 +162,6 @@ init =
 
 type Msg
     = Select Card
-    | Reset
     | MoreCards
 
 removeHelp : a -> a -> Bool
@@ -186,22 +192,40 @@ replace new old cards =
         Nothing ->
             []
 
+
+
 listReplace : List a -> List a -> List a -> List a
 listReplace new old cards =
     case new of
+        x :: rest0 ->
+            case (List.member x old) of
+                False ->
+                    case old of
+                        a :: rest1 ->
+                            case (List.member a new) of
+                                True ->
+                                    listReplace rest0 (remove a new) (remove a cards)
+                                False ->
+                                    (replace x a (listReplace rest0 rest1 (remove x cards)))
+                        rest1 ->
+                            cards
+                True ->
+                    listReplace rest0 (remove x old) (remove x cards)
+        rest0 -> 
+            cards
+
+
+listRemove : List a -> List a -> List a
+listRemove r cards =
+    case r of
         x :: y :: z :: rest ->
-            case old of
-                a :: b :: c :: peter ->
-                    (replace z c (replace y b (replace x a cards)))
-                peter ->
-                    []
+            remove x (remove y (remove z cards))
         rest ->
             []
 
-
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
-   ((x == y && y == z) || (x /= y && y /= z && x /= z))
+    ((x==y && y==z) || (x /= y && y /= z && z /= x))
 
 isSet : Card -> Card -> Card -> Bool
 isSet x y z =
@@ -209,43 +233,69 @@ isSet x y z =
     && (smartIsSet x.number y.number z.number)
     && (smartIsSet x.shading y.shading z.shading)
     && (smartIsSet x.shape y.shape z.shape))
-
-moreThanTwevle : List Card -> Model -> Model
-moreThanTwevle old model =
-    case ((length model.table) < 14) of
-        False ->
-            {model | table = (listremove old model.table)}
+moreThanTwelve : List Card -> Model -> Model
+moreThanTwelve old model =
+    case length model.table <= 14 of
+        False -> 
+            {model | table = (listReplace (drop ((length model.table) - 3) model.table) old model.table)}
         True ->
-            { model | table = (listReplace (List.take 3 model.cardPile) old model.table)
-            , cardPile = List.drop 3 model.cardPile}
+            {model | 
+            table =  listReplace (take 3 model.cardPile) (old) (model.table),
+            cardPile = drop 3 model.cardPile,
+            selection = []}
+
+
+listIsSet : List Card -> Bool
+listIsSet cards =
+    case cards of
+        x :: y :: z :: rest ->
+            isSet x y z
+        rest ->
+            False
+
+checkIfSet : List Card -> List Card -> Bool
+checkIfSet cards set =
+    case (length set == 3) of -- har set vi er på længden 3
+        True -> listIsSet set -- returner om det et set
+        False -> -- der er ik 3 kort i vores set
+            case (head cards) of --første kort fra cards
+                Just hc -> --
+                    (checkIfSet (drop 1 cards) (hc :: set) || checkIfSet (drop 1 cards ) (set)) -- bruger rekursion med et set md hhv. hc og uden hc
+                Nothing -> -- Cards er tom
+                    False
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Select c->
-            case (List.member c model.selection) of
+        Select card ->
+            case (List.member card model.selection) of
                 False ->
-                    case ((length model.selection) == 2) of
-                        False -> 
-                            {model | selection = c :: model.selection}
-                        True -> 
+                    case (length model.selection == 2) of
+                        False -> --0 eller 1 kort er valgt
+                            {model | selection = card :: model.selection}
+                        True -> --2 kort er valgt
                             case model.selection of
                                 x :: y :: rest ->
-                                    case (isSet x y c) of
-                                        True ->
-                                            moreThanTwevle [x,y,c] {model | selection = []}
-                                        False ->
+                                    case (isSet x y card) of
+                                        True -> --fjerner kort ved set
+                                            moreThanTwelve [x,y,card] {model | selection = [] }
+
+                                        False -> -- fjerne selection når der ikke er set
                                             {model | selection = []}
                                 rest ->
                                     model
                 True ->
-                    {model | selection = (remove c model.selection)}
-        Reset ->
-            {model | selection = []}
+                    {model | selection = (remove card model.selection)}
         MoreCards ->
-            { model | table = List.append model.table (List.take 3 model.cardPile)
-            , cardPile = List.drop 3 model.cardPile}
+            case (checkIfSet model.table []) of
+                True ->
+                    model
+                False ->
+                    {model | 
+                    table =  List.append model.table (take 3 model.cardPile), 
+                    cardPile = drop 3 model.cardPile
+                    }            
 
 
 -- VIEW
@@ -287,39 +337,42 @@ numberToInt number =
         Two -> 2
         Three -> 3
 
-cardIsSelected : List Card -> Card -> Attribute Msg
-cardIsSelected selected card =
-    case (List.member card selected) of
-        True ->
-            Attributes.class "card selected"
-        False ->
-            Attributes.class "card"
+getCardAttribute : List Card -> Card -> Attribute Msg
+getCardAttribute selection card =
+    case (List.member card selection) of
+        False -> Attributes.class "card"
+        True -> Attributes.class "card selected"
 
-buildRows : List Card -> List (List Card)
+
+viewCard : List Card -> Card -> Html Msg
+viewCard selection card =
+    Html.div [(getCardAttribute selection card), Events.onClick (Select card)
+        ] 
+        (List.repeat (numberToInt card.number) (Html.div 
+        [Attributes.class "symbol",
+        (shadingToClass card.shading), 
+        (colorToClass card.color), 
+        (shapeToClass card.shape)
+        ] []))
+
+viewRow : List Card -> List Card -> Html Msg
+viewRow selection cards =
+    Html.div [Attributes.class "row"] 
+        (List.map (viewCard selection) cards)
+
+buildRows: List Card -> List (List Card)
 buildRows cards =
     case cards of
         x :: y :: z :: rest ->
-            [x,y,z] :: (buildRows rest)
+            [x, y, z] :: (buildRows rest)
         rest ->
             []
 
-viewCard : List Card -> Card -> Html Msg
-viewCard selected card =
-    Html.div [(cardIsSelected selected card), Events.onClick (Select card)] 
-        (List.repeat (numberToInt card.number) (Html.div 
-        [ Attributes.class "symbol"
-        , (shadingToClass card.shading)
-        , (colorToClass card.color)
-        , (shapeToClass card.shape)][]))
-
-viewRow : List Card -> List Card -> Html Msg
-viewRow selected cards =
-    Html.div [Attributes.class "row"] 
-        (List.map (viewCard selected) cards)
 
 viewTable : List Card -> List Card -> Html Msg
-viewTable selected cards =
-    Html.div [Attributes.class "table"] (List.map (viewRow selected) (buildRows cards))
+viewTable selection cards =
+    Html.div [Attributes.class "table"] 
+        (List.map (viewRow selection) (buildRows cards)) 
 
 
 view : Model -> Html Msg
@@ -328,17 +381,13 @@ view model =
         [ Html.header []
             [ Html.h1 []
                 [ Html.text "Mit eget SET-spil"
-                ]
-            , Html.h3 []
-                [ Html.text model.besked
-                , Html.button [Events.onClick Reset]
-                        [Html.text "Reset"]
-                , Html.button [Events.onClick MoreCards]
-                        [Html.text "More Cards"]
-                ]
+                ],Html.text model.message,
+                Html.button [Events.onClick MoreCards] [Html.text "Flere kort"]
+
             ]
         , Html.main_ []
-            [(viewTable model.selection model.table)]
+            [(viewTable model.selection model.table)
+            ]
         ]
 
 
