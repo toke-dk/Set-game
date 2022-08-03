@@ -6,6 +6,7 @@ import Html.Attributes as Attributes
 import Html.Events as Events
 import Random
 import Random.List
+import List exposing (length)
 
 
 
@@ -136,7 +137,10 @@ isSet x y z =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Selected card -> {model | selection = card :: model.selection}
+        Selected card -> 
+            case ((length model.selection) < 3) of
+                True -> {model | selection = card :: model.selection}
+                False -> model
 
 
 
