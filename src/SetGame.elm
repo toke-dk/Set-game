@@ -182,7 +182,8 @@ viewCard _ card =
 
 viewRow : List Card -> Html Msg
 viewRow cards =
-    Html.div [Attributes.class "row"] (List.map (viewCard []) cards)
+    Html.div [Attributes.class "row"] 
+        (List.map (viewCard []) cards)
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
@@ -198,7 +199,7 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [(viewRow (List.repeat 5 exampleCard))]
+            [(viewRow (List.repeat 3 exampleCard))]
         ]
 
 
