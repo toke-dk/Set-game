@@ -94,8 +94,9 @@ myTable =
 -- MODEL
 
 
-type alias Model =
-    { table : List Card
+type alias Model = { 
+    table : List Card,
+    selection : List Card
     }
 
 
@@ -113,7 +114,8 @@ randomDeck number =
 
 init : Model
 init =
-    { table = myTable
+    { table = myTable,
+     selection = [{ shape = Oval, color = Green, shading = Open, number = Two }]
     }
 
 
@@ -122,7 +124,7 @@ init =
 
 
 type Msg
-    = ReplaceMe
+    = Selected Card
 
 
 isSet : Card -> Card -> Card -> Bool
@@ -134,28 +136,34 @@ isSet x y z =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ReplaceMe ->
-            model
+        Selected card -> {model | selection = card :: model.selection}
 
 
 
 -- VIEW
 
-viewRow: List Card -> Html Msg
-viewRow cards =
+viewRow: List Card -> List Card -> Html Msg
+viewRow selected cards =
     Html.div [Attributes.class "row"]
-        (List.map (viewCard []) cards) 
+        (List.map (viewCard selected) cards) 
 
 -- [(viewCard [] exampleCard), (viewCard [] exampleCard), (viewCard [] exampleCard)]
 
 viewCard : List Card -> Card -> Html Msg
-viewCard _ card =
-    Html.div [Attributes.class "card"] 
+viewCard selected card =
+    Html.div [getCardAtrribute selected card, Events.onClick (Selected card) ] 
         (List.repeat (numberToInt card.number) (Html.div
             [Attributes.class "symbol", 
             (shapeToClass card.shape), 
             (shadingToClass card.shading),
-            (colorToClass card.color)] [])) 
+            (colorToClass card.color)
+            ] [])) 
+
+getCardAtrribute :  List(Card) -> Card -> Attribute Msg
+getCardAtrribute selected card =  
+    case (List.member card selected) of
+        True -> Attributes.class "card selected"
+        False -> Attributes.class "card"
 
 colorToClass : Color -> Attribute Msg
 colorToClass color =
@@ -188,8 +196,8 @@ buildRows cards =
             []
 
 viewTable : List Card -> List Card -> Html Msg
-viewTable _ cards =
-    Html.div [Attributes.class "table"] (List.map viewRow (buildRows cards))
+viewTable selected cards =
+    Html.div [Attributes.class "table"] (List.map (viewRow selected) (buildRows cards))
 
 view : Model -> Html Msg
 view model =
@@ -201,7 +209,7 @@ view model =
             ]
         , Html.main_ []
             [ Html.div [][
-                Html.div [][viewTable [] model.table]
+                Html.div [][viewTable model.selection model.table]
             ] ]
         ]
 
