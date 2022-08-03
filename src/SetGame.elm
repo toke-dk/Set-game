@@ -124,6 +124,7 @@ type alias Model =
     cardPile : List Card
     }
 
+
 fullDeck : List Card
 fullDeck =
     (concatMap genCardNumber
@@ -133,17 +134,19 @@ fullDeck =
 
 
 randomDeck : Int -> List Card
-randomDeck number =
-    {- TODO -}
-    [ exampleCard ]
+randomDeck number  =
+    let
+        (deck, seed0) = Random.step (Random.List.shuffle fullDeck) (Random.initialSeed number)
+    in 
+        deck
 
 
 init : Model
 init =
-    { table = take 12 fullDeck,
+    { table = take 12 (randomDeck 42),
     selection = [],
     message = "",
-    cardPile = drop 12 fullDeck
+    cardPile = drop 12 (randomDeck 42)
     }
 
 
@@ -153,6 +156,7 @@ init =
 
 type Msg
     = Select Card
+    | MoreCards
 
 
 removeHelp : a -> a -> Bool
@@ -202,6 +206,11 @@ update msg model =
                                     model
                 True ->
                     {model | selection = (remove card model.selection)}
+        MoreCards ->
+            {model | 
+            table =  List.append model.table (take 3 model.cardPile), 
+            cardPile = drop 3 model.cardPile
+            }            
 
 
 -- VIEW
@@ -287,7 +296,8 @@ view model =
         [ Html.header []
             [ Html.h3 []
                 [ Html.text "Mit eget SET-spil"
-                ],Html.text model.message
+                ],Html.text model.message,
+                Html.button [Events.onClick MoreCards] [Html.text "Flere kort"]
 
             ]
         , Html.main_ []
