@@ -157,9 +157,9 @@ update msg model =
                             case model.selection of
                                 x :: y :: rest ->
                                     case (isSet x y card) of
-                                        True ->
-                                            {model | selection = []}
-                                        False ->
+                                        True -> --fjerner kort ved set
+                                            {model | table = (remove x (remove y (remove card model.table)))}
+                                        False -> -- fjerne selection når der ikke er set
                                             {model | selection = []}
                                 rest ->
                                     model
