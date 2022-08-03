@@ -101,8 +101,13 @@ type alias Model = {
     besked : String,
     cardPile : List Card,
     isReady : Bool,
-    playersTurn : Int,
-    amountOfPlayers : Int
+    totalPlayers : List PlayerAlias
+
+    }
+
+type alias PlayerAlias = {
+    id : Int,
+    points : Int
     }
     
 
@@ -122,9 +127,8 @@ init =
      selection = [],
      besked = "",
      cardPile = List.drop 12 (randomDeck 42),
-     isReady = False,
-     playersTurn = 1,
-     amountOfPlayers = 1
+     isReady = False,  
+     totalPlayers = [{id = 0, points = 0}] 
     }
 
 
@@ -181,7 +185,7 @@ update msg model =
         Set -> model
         MoreCards -> { model | cardPile = (List.drop 3 model.cardPile), table = (List.append model.table (List.take 3 model.cardPile)) }
         ChangeReadyState state -> {model | isReady = state}
-        AddAPlayer -> {model | amountOfPlayers = model.amountOfPlayers + 1}
+        AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
         -- change
 
 
@@ -276,6 +280,9 @@ viewTable : List Card -> List Card -> Html Msg
 viewTable selected cards =
     Html.div [Attributes.class "table"] (List.map (viewRow selected) (buildRows cards))
 
+displayPlayerInfo : Int -> Html Msg
+displayPlayerInfo amountOfPlayers = Html.div [][]
+
 view : Model -> Html Msg
 view model =
     case (model.isReady) of 
@@ -285,7 +292,7 @@ view model =
                         [ Html.h3 []
                             [ Html.text "Vælg spillere"
                             ]
-                        ,   (Html.text ("Spillere i alt: '" ++ (String.fromInt model.amountOfPlayers) ++ "' "))
+                        ,   (Html.text ("Spillere i alt: '" ++ (String.fromInt (List.length model.totalPlayers)) ++ "' "))
                         ],
                         Html.div [] [
 
@@ -300,7 +307,8 @@ view model =
                         [ Html.h3 []
                             [ Html.text "Mit eget SET-spil"
                             ]
-                        , (Html.text model.besked)
+                        , (Html.text ("Spillere: " ++ (String.fromInt (List.length model.totalPlayers))))
+                        , (Html.text ("Point: " ++ (String.fromInt (List.length model.totalPlayers))))
                         , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
                         ],
                         Html.main_ []
