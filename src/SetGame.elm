@@ -159,7 +159,7 @@ update msg model =
                             x :: y :: rest ->
                                 case (isSet x y card) of 
                                     True ->
-                                        {model | besked = "Korrekt!", selection = []}
+                                        {model | besked = "Korrekt!", selection = [], table = (remove y (remove x (remove card model.table)))}
                                     False ->
                                         {model | besked = "Fejl!", selection = []}
                             rest ->
