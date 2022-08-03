@@ -10,7 +10,7 @@ import Random.List
 
 
 -- CARD (Denne sektion definerer Card typen)
-
+--test
 
 type Shape
     = Diamond
