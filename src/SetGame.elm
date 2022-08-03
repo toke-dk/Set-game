@@ -100,13 +100,7 @@ type alias Model = {
     selection : List Card,
     besked : String
     }
-
-
-fullDeck : List Card
-fullDeck =
-    {- TODO -}
-    [ exampleCard, exampleCard ]
-
+    
 
 randomDeck : Int -> List Card
 randomDeck number =
@@ -116,7 +110,7 @@ randomDeck number =
 
 init : Model
 init =
-    { table = myTable,
+    { table = fullDeck,
      selection = [],
      besked = ""
     }
@@ -171,6 +165,30 @@ update msg model =
 
 
 -- VIEW
+
+createColorList : Card -> List Card
+createColorList card = 
+    [{ card | color = Purple },{ card | color = Green }, { card | color =  Red }]
+
+createShapeList : Card -> List Card
+createShapeList card = 
+    [{ card | shape = Oval },{ card | shape = Diamond }, { card | shape =  Squiggle }]
+
+createNumberList : Card -> List Card
+createNumberList card = 
+    [{ card | number = One },{ card | number = Two }, { card | number =  Three }]
+
+createShadingList : Card -> List Card
+createShadingList card = 
+    [{ card | shading = Solid },{ card | shading = Open }, { card | shading =  Striped }]
+
+
+fullDeck : List Card
+fullDeck = 
+    List.concatMap createShapeList (
+    (List.concatMap createShadingList
+    (List.concatMap createNumberList 
+    (List.concatMap createColorList [exampleCard]))))
 
 viewRow: List Card -> List Card -> Html Msg
 viewRow selected cards =
