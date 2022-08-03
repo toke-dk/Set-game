@@ -115,10 +115,10 @@ randomDeck number =
 
 init : Model
 init =
-    { table = List.take 12 (randomDeck 2),
+    { table = List.take 12 (randomDeck 42),
      selection = [],
      besked = "",
-     cardPile = List.drop 12 (randomDeck 2)
+     cardPile = List.drop 12 (randomDeck 42)
     }
 
 
@@ -162,9 +162,8 @@ update msg model =
                                     True ->
                                         moreThanTwelve {model | besked = "Korrekt!"
                                         , selection = []
-                                        , table = (List.append (remove y (remove x (remove card model.table))) 
-                                            (List.take 3 model.cardPile))
-                                        , cardPile = (List.drop 3 model.cardPile)}
+                                        , table = (remove x (remove card model.table))
+                                        }
                                     False ->
                                         {model | besked = "Fejl!", selection = []}
                             rest ->
