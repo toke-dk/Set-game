@@ -88,7 +88,8 @@ myTable =
 
 
 type alias Model =
-    { table : List Card
+    { table : List Card,
+    selection : List Card
     }
 
 fullDeck : List Card
@@ -105,7 +106,8 @@ randomDeck number =
 
 init : Model
 init =
-    { table = myTable
+    { table = myTable,
+    selection = []
     }
 
 
@@ -114,7 +116,7 @@ init =
 
 
 type Msg
-    = ReplaceMe
+    = Select Card
 
 
 isSet : Card -> Card -> Card -> Bool
@@ -126,8 +128,8 @@ isSet x y z =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ReplaceMe ->
-            model
+        Select card ->
+            {model | selection = card :: model.selection}
 
 
 
@@ -157,7 +159,7 @@ shadingtoClass : Shading -> Attribute Msg
 shadingtoClass shading =
     case shading of
         Open ->
-            Attributes.class "solid"
+            Attributes.class "open"
         Striped ->
             Attributes.class "striped"
         Solid ->
@@ -170,19 +172,27 @@ numbertoInt number =
         Two -> 2
         Three -> 3
 
+getCardAttribute : List Card -> Card -> Attribute Msg
+getCardAttribute selection card =
+    case (List.member card selection) of
+        False -> Attributes.class "card"
+        True -> Attributes.class "card selected"
+
+
 viewCard : List Card -> Card -> Html Msg
-viewCard _ card =
-    Html.div [Attributes.class "card"] 
+viewCard selection card =
+    Html.div [(getCardAttribute selection card), Events.onClick (Select card)] 
         (List.repeat (numbertoInt card.number) (Html.div 
         [Attributes.class "symbol",
         (shadingtoClass card.shading), 
         (colortoClass card.color), 
-        (shapetoClass card.shape)] []))
+        (shapetoClass card.shape)
+        ] []))
 
-viewRow : List Card -> Html Msg
-viewRow cards =
+viewRow : List Card -> List Card -> Html Msg
+viewRow selection cards =
     Html.div [Attributes.class "row"] 
-        (List.map (viewCard []) cards)
+        (List.map (viewCard selection) cards)
 
 buildRows: List Card -> List (List Card)
 buildRows cards =
@@ -194,8 +204,9 @@ buildRows cards =
 
 
 viewTable : List Card -> List Card -> Html Msg
-viewTable _ cards =
-    Html.div [Attributes.class "table"] (List.map viewRow (buildRows cards)) 
+viewTable selection cards =
+    Html.div [Attributes.class "table"] 
+        (List.map (viewRow selection) (buildRows cards)) 
 
 
 view : Model -> Html Msg
@@ -207,7 +218,7 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [(viewTable [] model.table)]
+            [(viewTable model.selection model.table)]
         ]
 
 
