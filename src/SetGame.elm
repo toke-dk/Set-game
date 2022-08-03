@@ -167,6 +167,40 @@ remove : a -> List a -> List a
 remove a listA =
     (filter (removeHelp a) listA)
 
+replace : a -> a -> List a -> List a
+replace new old cards =
+    case (List.head cards) of
+        Just c ->
+            case (c == old) of
+                True ->
+                    (new :: (List.drop 1 cards))
+                False ->
+                    (c :: (replace new old (List.drop 1 cards)))
+
+        Nothing ->
+            []
+
+listReplace : List a -> List a -> List a -> List a
+listReplace new old cards =
+    case new of
+        x :: y :: z :: rest0 ->
+            case old of
+                a :: b :: c :: rest1 ->
+                    (replace z c (replace y b (replace x a cards)))
+                rest1 ->
+                    []
+        rest0 -> 
+            []
+
+listRemove : List a -> List a -> List a
+listRemove r cards =
+    case r of
+        x :: y :: z :: rest ->
+            remove x (remove y (remove z cards))
+        rest ->
+            []
+
+
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
     ((x==y && y==z) || (x /= y && y /= z && z /= x))
@@ -179,17 +213,16 @@ isSet x y z =
     && (smartIsSet x.shading y.shading z.shading)
 
 
-moreThanTwelve : Model -> Model
-moreThanTwelve model =
-    case length model.table <= 11 of
+moreThanTwelve : List Card -> Model -> Model
+moreThanTwelve old model =
+    case length model.table <= 14 of
         False -> 
-            model
+            {model | table = listRemove old model.table}
         True ->
             {model | 
-            table =  List.append model.table (take 3 model.cardPile) ,
+            table =  listReplace (take 3 model.cardPile) (old) (model.table),
             cardPile = drop 3 model.cardPile,
             selection = []}
-
 
 update : Msg -> Model -> Model
 update msg model =
@@ -205,8 +238,8 @@ update msg model =
                                 x :: y :: rest ->
                                     case (isSet x y card) of
                                         True -> --fjerner kort ved set
-                                            moreThanTwelve {model | table = (remove x (remove y (remove card model.table))) }
-                                            
+                                            moreThanTwelve [x,y,card] {model | selection = [] }
+
                                         False -> -- fjerne selection når der ikke er set
                                             {model | selection = []}
                                 rest ->
