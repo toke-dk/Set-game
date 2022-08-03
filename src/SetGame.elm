@@ -132,7 +132,7 @@ type Msg
     | Set
 
 smartIsSet : a -> a -> a -> Bool
-smartIsSet x y z = ((x == y && y == z) || (x /= y && y /= z)) 
+smartIsSet x y z = ((x == y && y == z) || (x /= y && y /= z && x /= z)) 
 
 isSet : Card -> Card -> Card -> Bool
 isSet x y z =
