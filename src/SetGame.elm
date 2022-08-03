@@ -141,10 +141,12 @@ update msg model =
 
 -- VIEW
 
-viewRow: Card -> Card -> Card -> Html Msg
-viewRow firstCard secondCard thirdCard =
+viewRow: List Card -> Html Msg
+viewRow cards =
     Html.div [Attributes.class "row"]
-        [(viewCard [] exampleCard), (viewCard [] exampleCard), (viewCard [] exampleCard)]
+        (List.map (viewCard []) cards) 
+
+-- [(viewCard [] exampleCard), (viewCard [] exampleCard), (viewCard [] exampleCard)]
 
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
@@ -192,7 +194,7 @@ view model =
             ]
         , Html.main_ []
             [ Html.div [][
-                Html.div [][(viewRow exampleCard exampleCard exampleCard)]
+                Html.div [][(viewRow [exampleCard, exampleCard, exampleCard, exampleCard])]
             ] ]
         ]
 
