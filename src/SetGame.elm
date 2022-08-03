@@ -12,6 +12,7 @@ import Random.Extra exposing (bool)
 import List exposing (concatMap)
 import List exposing (take)
 import List exposing (drop)
+import List exposing (head)
 
 
 
@@ -183,14 +184,23 @@ replace new old cards =
 listReplace : List a -> List a -> List a -> List a
 listReplace new old cards =
     case new of
-        x :: y :: z :: rest0 ->
-            case old of
-                a :: b :: c :: rest1 ->
-                    (replace z c (replace y b (replace x a cards)))
-                rest1 ->
-                    []
+        x :: rest0 ->
+            case (List.member x old) of
+                False ->
+                    case old of
+                        a :: rest1 ->
+                            case (List.member a new) of
+                                True ->
+                                    listReplace rest0 (remove a new) (remove a cards)
+                                False ->
+                                    (replace x a (listReplace rest0 rest1 (remove x cards)))
+                        rest1 ->
+                            cards
+                True ->
+                    listReplace rest0 (remove x old) (remove x cards)
         rest0 -> 
-            []
+            cards
+
 
 listRemove : List a -> List a -> List a
 listRemove r cards =
@@ -199,7 +209,6 @@ listRemove r cards =
             remove x (remove y (remove z cards))
         rest ->
             []
-
 
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
@@ -217,12 +226,33 @@ moreThanTwelve : List Card -> Model -> Model
 moreThanTwelve old model =
     case length model.table <= 14 of
         False -> 
-            {model | table = listRemove old model.table}
+            {model | table = (listReplace (drop ((length model.table) - 3) model.table) old model.table)}
         True ->
             {model | 
             table =  listReplace (take 3 model.cardPile) (old) (model.table),
             cardPile = drop 3 model.cardPile,
             selection = []}
+
+
+listIsSet : List Card -> Bool
+listIsSet cards =
+    case cards of
+        x :: y :: z :: rest ->
+            isSet x y z
+        rest ->
+            False
+
+checkIfSet : List Card -> List Card -> Bool
+checkIfSet cards set =
+    case (length set == 3) of -- har set vi er på længden 3
+        True -> listIsSet set -- returner om det et set
+        False -> -- der er ik 3 kort i vores set
+            case (head cards) of --første kort fra cards
+                Just hc -> --
+                    (checkIfSet (drop 1 cards) (hc :: set) || checkIfSet (drop 1 cards ) (set)) -- bruger rekursion med et set md hhv. hc og uden hc
+                Nothing -> -- Cards er tom
+                    False
+
 
 update : Msg -> Model -> Model
 update msg model =
@@ -247,10 +277,14 @@ update msg model =
                 True ->
                     {model | selection = (remove card model.selection)}
         MoreCards ->
-            {model | 
-            table =  List.append model.table (take 3 model.cardPile), 
-            cardPile = drop 3 model.cardPile
-            }            
+            case (checkIfSet model.table []) of
+                True ->
+                    model
+                False ->
+                    {model | 
+                    table =  List.append model.table (take 3 model.cardPile), 
+                    cardPile = drop 3 model.cardPile
+                    }            
 
 
 -- VIEW
