@@ -152,30 +152,22 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Selected card -> 
-            case ((length model.selection) == 3) of
-                True -> case model.selection of
-                    x :: y :: z :: rest ->
-                        case (isSet x y z) of 
-                            True ->
-                                {model | besked = "Korrekt!", selection = []}
-                            False ->
-                                {model | besked = "Fejl!", selection = []}
-                    rest ->
-                        model
-                False -> {model | selection = card :: model.selection}
+            case (List.member card model.selection) of
+                False ->
+                    case ((length model.selection) == 2) of
+                        True -> case model.selection of
+                            x :: y :: rest ->
+                                case (isSet x y card) of 
+                                    True ->
+                                        {model | besked = "Korrekt!", selection = []}
+                                    False ->
+                                        {model | besked = "Fejl!", selection = []}
+                            rest ->
+                                model
+                        False -> {model | selection = card :: model.selection}
+                True -> {model | selection = (remove card model.selection)}
         ResetSelection cards -> {model | selection = []}
         Set -> model
-        -- case model.selection of
-            -- x :: y :: z :: rest ->
-            --     case (isSet x y z) of 
-            --         True ->
-            --         -- table = remove model.table model.selection
-            --             {model | besked = "Korrekt!", selection = []}
-            --         False ->
-            --             {model | besked = "Fejl!", selection = []}
-            -- rest ->
-            --     model
-
 
 
 -- VIEW
