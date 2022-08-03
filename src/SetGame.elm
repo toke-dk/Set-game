@@ -95,7 +95,7 @@ myTable =
 
 
 type alias Model =
-    { replaceMe : ()
+    { table : List Card
     }
 
 
@@ -113,7 +113,7 @@ randomDeck number =
 
 init : Model
 init =
-    { replaceMe = ()
+    { table = myTable
     }
 
 
@@ -179,10 +179,17 @@ shadingToClass shading =
         Striped -> Attributes.class "striped"
         Solid -> Attributes.class "solid"
 
+buildRows: List Card -> List (List Card)
+buildRows cards =
+    case cards of 
+        x :: y :: z :: rest ->
+            [x,y,z] :: (buildRows rest)
+        rest ->
+            []
+
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
-    Html.div [] [ Html.div [] [ Html.text "todo" ] ]
-
+    Html.div [Attributes.class "table"] (List.map viewRow (buildRows cards))
 
 view : Model -> Html Msg
 view model =
@@ -194,7 +201,7 @@ view model =
             ]
         , Html.main_ []
             [ Html.div [][
-                Html.div [][(viewRow [exampleCard, exampleCard, exampleCard, exampleCard])]
+                Html.div [][viewTable [] model.table]
             ] ]
         ]
 
