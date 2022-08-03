@@ -9,6 +9,7 @@ import Random.List
 import List exposing (length, filter)
 import Html exposing (a)
 import Random.Extra exposing (bool)
+import List exposing (concatMap)
 
 
 
@@ -48,6 +49,30 @@ type alias Card =
 
 
 -- CONSTANTS (Her finder du "konstanter" eller eksempeldata, som du kan bruge til at tjekke dine funktioner med)
+
+genCardColor : Card -> List Card
+genCardColor card =
+    [{card | color = Red}
+    , {card | color = Green}
+    , {card | color = Purple}]
+
+genCardShape : Card -> List Card
+genCardShape card =
+    [{card | shape = Squiggle}
+    , {card | shape = Oval}
+    , {card | shape = Diamond}]
+
+genCardShading : Card -> List Card
+genCardShading card =
+    [{card | shading = Solid}
+    , {card | shading = Open}
+    , {card | shading = Striped}]
+
+genCardNumber : Card -> List Card
+genCardNumber card =
+    [{card | number = One}
+    , {card | number = Two}
+    , {card | number = Three}]
 
 
 exampleCard : Card
@@ -98,8 +123,10 @@ type alias Model =
 
 fullDeck : List Card
 fullDeck =
-    {- TODO -}
-    [ exampleCard, exampleCard ]
+    (concatMap genCardNumber
+    (concatMap genCardShape 
+    (concatMap genCardShading 
+    (genCardColor exampleCard))))
 
 
 randomDeck : Int -> List Card
@@ -110,7 +137,7 @@ randomDeck number =
 
 init : Model
 init =
-    { table = myTable,
+    { table = fullDeck,
     selection = [],
     message = ""
     }
