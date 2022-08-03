@@ -85,7 +85,7 @@ genCardNumber card =
     , {card | number = Three}]
 
 
-exampleCard : Card
+exampleCard : Card 
 exampleCard =
     { shape = Squiggle
     , color = Red
@@ -123,14 +123,28 @@ myTable =
 
 
 -- MODEL
-
-type alias Model =
-    { table : List Card,
+type alias Model = { 
+    table : List Card,
     selection : List Card,
-    message : String,
-    cardPile : List Card
+    besked : String,
+    cardPile : List Card,
+    isReady : Bool,
+    totalPlayers : List PlayerAlias
     }
 
+type alias PlayerAlias = {
+    id : Int,
+    points : Int
+    }
+
+init : Model
+init =
+    { table = List.take 12 (randomDeck 42),
+     selection = [],
+     besked = "",
+     cardPile = List.drop 12 (randomDeck 42),
+     isReady = False,  
+     totalPlayers = [{id = 0, points = 0}]  }
 
 fullDeck : List Card
 fullDeck =
@@ -147,13 +161,7 @@ randomDeck number =
     in
         deck
 
-init : Model
-init =
-    { table = List.take 12 (randomDeck 42)
-    , selection = []
-    , message = ""
-    , cardPile = List.drop 12 (randomDeck 42)
-    }
+    
 
 
 
@@ -163,6 +171,19 @@ init =
 type Msg
     = Select Card
     | MoreCards
+    | ChangeReadyState Bool
+    | AddAPlayer
+    | ChangePoints PlayerAlias Int
+
+changePointsFunction : Model -> PlayerAlias -> Int -> Model
+changePointsFunction model player points = 
+    case (List.head model.totalPlayers) of
+        Nothing -> model
+        Just p -> case (player == p) of
+            True -> {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
+            False -> {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } player points).totalPlayers}
+
+    
 
 removeHelp : a -> a -> Bool
 removeHelp a b =
@@ -295,7 +316,11 @@ update msg model =
                     {model | 
                     table =  List.append model.table (take 3 model.cardPile), 
                     cardPile = drop 3 model.cardPile
-                    }            
+                    }
+        ChangeReadyState state -> {model | isReady = state}
+        AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
+        ChangePoints player points -> changePointsFunction model player points 
+  
 
 
 -- VIEW
@@ -368,27 +393,55 @@ buildRows cards =
         rest ->
             []
 
+getCardAtrribute :  List(Card) -> Card -> Attribute Msg
+getCardAtrribute selected card =  
+    case (List.member card selected) of
+        True -> Attributes.class "card selected"
+        False -> Attributes.class "card"
+
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable selection cards =
     Html.div [Attributes.class "table"] 
         (List.map (viewRow selection) (buildRows cards)) 
 
+displayPlayerInfo : PlayerAlias -> Html Msg
+displayPlayerInfo playerInfo = Html.div[] 
+    [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)) ++ " ")
+    , (Html.button [Events.onClick (ChangePoints playerInfo 1)][Html.text "+1"])
+    , (Html.button [Events.onClick (ChangePoints playerInfo -1)][Html.text "-1"])
+    ]
 
 view : Model -> Html Msg
 view model =
-    Html.div []
-        [ Html.header []
-            [ Html.h1 []
-                [ Html.text "Mit eget SET-spil"
-                ],Html.text model.message,
-                Html.button [Events.onClick MoreCards] [Html.text "Flere kort"]
+    case (model.isReady) of 
+            False ->
+                Html.div []
+                    [ Html.header []
+                        [ Html.h3 []
+                            [ Html.text "Vælg spillere"
+                            ]
+                        ,   (Html.text ("Spillere i alt: '" ++ (String.fromInt (List.length model.totalPlayers)) ++ "' "))
+                        ],
+                        Html.div [] [
 
-            ]
-        , Html.main_ []
-            [(viewTable model.selection model.table)
-            ]
-        ]
+                            Html.button [Events.onClick AddAPlayer][Html.text "Tilføj spiller"],
+                            Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
+
+                        ]
+                    ]
+            True ->
+                Html.div []
+                    [ Html.header []
+                        [ Html.h3 []
+                            [ Html.text "Mit eget SET-spil"
+                            ]
+                        , Html.div [] (List.map displayPlayerInfo model.totalPlayers)
+                        , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
+                        ],
+                        Html.main_ []
+                        [ Html.div [][viewTable model.selection model.table] ]
+                    ]
 
 
 
