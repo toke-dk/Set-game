@@ -98,7 +98,8 @@ myTable =
 type alias Model = { 
     table : List Card,
     selection : List Card,
-    besked : String
+    besked : String,
+    cardPile : List Card
     }
     
 
@@ -110,9 +111,10 @@ randomDeck number =
 
 init : Model
 init =
-    { table = fullDeck,
+    { table = (List.take 12 fullDeck),
      selection = [],
-     besked = ""
+     besked = "",
+     cardPile = List.drop 12 fullDeck
     }
 
 
@@ -153,7 +155,11 @@ update msg model =
                             x :: y :: rest ->
                                 case (isSet x y card) of 
                                     True ->
-                                        {model | besked = "Korrekt!", selection = [], table = (remove y (remove x (remove card model.table)))}
+                                        {model | besked = "Korrekt!"
+                                        , selection = []
+                                        , table = (List.append (remove y (remove x (remove card model.table))) 
+                                            (List.take 3 model.cardPile))
+                                        , cardPile = (List.drop 3 model.cardPile)}
                                     False ->
                                         {model | besked = "Fejl!", selection = []}
                             rest ->
