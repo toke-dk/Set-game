@@ -117,7 +117,7 @@ randomDeck number =
 init : Model
 init =
     { table = myTable,
-     selection = [{ shape = Oval, color = Green, shading = Open, number = Two }],
+     selection = [],
      besked = ""
     }
 
