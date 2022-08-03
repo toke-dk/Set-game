@@ -106,6 +106,8 @@ type alias Model = {
 randomDeck : Int -> List Card
 randomDeck number = 
     let 
+        -- Random.step shuffles a Generator with a seed, and gives the 
+        -- seed and the shuffled generator
         (deck, seed1) = Random.step (Random.List.shuffle fullDeck) (Random.initialSeed number)
     in
         deck
@@ -158,7 +160,7 @@ update msg model =
                             x :: y :: rest ->
                                 case (isSet x y card) of 
                                     True ->
-                                        {model | besked = "Korrekt!"
+                                        moreThanTwelve {model | besked = "Korrekt!"
                                         , selection = []
                                         , table = (List.append (remove y (remove x (remove card model.table))) 
                                             (List.take 3 model.cardPile))
@@ -175,6 +177,14 @@ update msg model =
 
 
 -- VIEW
+
+moreThanTwelve : Model -> Model
+moreThanTwelve model = 
+    case ((List.length model.table) < 11) of
+        False -> model
+        True -> 
+            { model | table = (List.append (model.table) (List.take 3 model.cardPile))
+            ,cardPile = (List.drop 3 model.cardPile)}
 
 createColorList : Card -> List Card
 createColorList card = 
