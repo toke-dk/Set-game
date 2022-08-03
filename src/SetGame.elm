@@ -126,6 +126,7 @@ init =
 
 type Msg
     = Selected Card
+    | ResetSelection (List Card)
 
 
 isSet : Card -> Card -> Card -> Bool
@@ -141,6 +142,7 @@ update msg model =
             case ((length model.selection) < 3) of
                 True -> {model | selection = card :: model.selection}
                 False -> model
+        ResetSelection cards -> {model | selection = []}
 
 
 
@@ -213,7 +215,8 @@ view model =
             ]
         , Html.main_ []
             [ Html.div [][
-                Html.div [][viewTable model.selection model.table]
+                Html.div [][viewTable model.selection model.table],
+                Html.div [][(Html.button [Events.onClick (ResetSelection model.selection)][Html.text "Reset"])]
             ] ]
         ]
 
