@@ -13,6 +13,7 @@ import Html exposing (a)
 import List exposing (filter)
 import List exposing (concatMap)
 import Random exposing (initialSeed)
+import List exposing (head)
 
 
 
@@ -165,6 +166,38 @@ remove : a -> List a -> List a
 remove c cards =
     (List.filter (removeHelp c) cards)
 
+listremove : List a -> List a -> List a
+listremove r cards =
+    case r of
+        a :: b :: c :: rest ->
+            (remove a (remove b (remove c cards)))
+        rest ->
+            []
+
+replace : a -> a -> List a -> List a
+replace new old cards =
+    case (head cards) of
+        Just c ->
+            case (c == old) of
+                True ->
+                    (new :: (List.drop 1 cards))
+                False ->
+                    (c :: (replace new old (List.drop 1 cards)))
+        Nothing ->
+            []
+
+listReplace : List a -> List a -> List a -> List a
+listReplace new old cards =
+    case new of
+        x :: y :: z :: rest ->
+            case old of
+                a :: b :: c :: peter ->
+                    (replace z c (replace y b (replace x a cards)))
+                peter ->
+                    []
+        rest ->
+            []
+
 
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
@@ -176,6 +209,15 @@ isSet x y z =
     && (smartIsSet x.number y.number z.number)
     && (smartIsSet x.shading y.shading z.shading)
     && (smartIsSet x.shape y.shape z.shape))
+
+moreThanTwevle : List Card -> Model -> Model
+moreThanTwevle old model =
+    case ((length model.table) < 14) of
+        False ->
+            {model | table = (listremove old model.table)}
+        True ->
+            { model | table = (listReplace (List.take 3 model.cardPile) old model.table)
+            , cardPile = List.drop 3 model.cardPile}
 
 
 update : Msg -> Model -> Model
@@ -192,9 +234,7 @@ update msg model =
                                 x :: y :: rest ->
                                     case (isSet x y c) of
                                         True ->
-                                            {model | table = List.append (remove c (remove y (remove x model.table))) (List.take 3 model.cardPile)
-                                            , cardPile = List.drop 3 model.cardPile
-                                            , selection = []}
+                                            moreThanTwevle [x,y,c] {model | selection = []}
                                         False ->
                                             {model | selection = []}
                                 rest ->
