@@ -1,0 +1,67 @@
+.table {
+    display: block;
+    width: max-content;
+}
+
+.row {
+    display: inline-flex;
+    width: 100%;
+}
+
+.column {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.spacer, .card {
+    display: flex;
+    box-sizing: border-box;
+    margin: 8px;
+    width: 128px;
+    height: 80px;
+}
+
+.column > .spacer, .column > .card {
+    transform: rotate(90deg);
+    margin: 32px -16px;
+}
+
+.card {
+    border: 1px solid black;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.selected {
+    background-color: lightgray;
+}
+
+.symbol.two::after {
+  margin-left: 16px;
+}
+
+.symbol, .symbol.two::after {
+    content: " ";
+    display: inline-block;
+    width: 32px;
+    height: 64px;
+    mask-image: url(/assets/symbols.svg);
+    -webkit-mask-image: url(/assets/symbols.svg);
+}
+
+/* shading */
+.open { mask-position-y: -0px; -webkit-mask-position-y: -0px; }
+.striped { mask-position-y: -64px; -webkit-mask-position-y: -64px; }
+.solid { mask-position-y: -128px; -webkit-mask-position-y: -128px; }
+
+/* shape */
+.diamond { mask-position-x: -0px; -webkit-mask-position-x: -0px; }
+.squiggle { mask-position-x: -32px; -webkit-mask-position-x: -32px; }
+.oval { mask-position-x: -64px; -webkit-mask-position-x: -64px; }
+
+/* color */
+.green, .green::after { background-color: green; }
+.purple, .purple::after { background-color: purple; }
+.red, .red::after { background-color: red; }
