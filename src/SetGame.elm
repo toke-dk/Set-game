@@ -10,6 +10,8 @@ import List exposing (length, filter)
 import Html exposing (a)
 import Random.Extra exposing (bool)
 import List exposing (concatMap)
+import List exposing (take)
+import List exposing (drop)
 
 
 
@@ -118,7 +120,8 @@ myTable =
 type alias Model =
     { table : List Card,
     selection : List Card,
-    message : String
+    message : String,
+    cardPile : List Card
     }
 
 fullDeck : List Card
@@ -137,9 +140,10 @@ randomDeck number =
 
 init : Model
 init =
-    { table = fullDeck,
+    { table = take 12 fullDeck,
     selection = [],
-    message = ""
+    message = "",
+    cardPile = drop 12 fullDeck
     }
 
 
@@ -149,6 +153,7 @@ init =
 
 type Msg
     = Select Card
+
 
 removeHelp : a -> a -> Bool
 removeHelp x y = 
@@ -185,7 +190,12 @@ update msg model =
                                 x :: y :: rest ->
                                     case (isSet x y card) of
                                         True -> --fjerner kort ved set
-                                            {model | table = (remove x (remove y (remove card model.table)))}
+                                            {model | 
+                                            table =  List.append (remove x (remove y (remove card model.table))) (take 3 model.cardPile) , 
+                                            selection = [],
+                                            cardPile = drop 3 model.cardPile
+                                            }
+                                            
                                         False -> -- fjerne selection når der ikke er set
                                             {model | selection = []}
                                 rest ->
