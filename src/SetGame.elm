@@ -179,6 +179,17 @@ isSet x y z =
     && (smartIsSet x.shading y.shading z.shading)
 
 
+moreThanTwelve : Model -> Model
+moreThanTwelve model =
+    case length model.table <= 11 of
+        False -> 
+            model
+        True ->
+            {model | 
+            table =  List.append model.table (take 3 model.cardPile) ,
+            cardPile = drop 3 model.cardPile,
+            selection = []}
+
 
 update : Msg -> Model -> Model
 update msg model =
@@ -194,11 +205,7 @@ update msg model =
                                 x :: y :: rest ->
                                     case (isSet x y card) of
                                         True -> --fjerner kort ved set
-                                            {model | 
-                                            table =  List.append (remove x (remove y (remove card model.table))) (take 3 model.cardPile) , 
-                                            selection = [],
-                                            cardPile = drop 3 model.cardPile
-                                            }
+                                            moreThanTwelve {model | table = (remove x (remove y (remove card model.table))) }
                                             
                                         False -> -- fjerne selection når der ikke er set
                                             {model | selection = []}
