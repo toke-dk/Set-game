@@ -280,8 +280,10 @@ viewTable : List Card -> List Card -> Html Msg
 viewTable selected cards =
     Html.div [Attributes.class "table"] (List.map (viewRow selected) (buildRows cards))
 
-displayPlayerInfo : Int -> Html Msg
-displayPlayerInfo amountOfPlayers = Html.div [][]
+displayPlayerInfo : PlayerAlias -> Html Msg
+displayPlayerInfo playerInfo = Html.div[] 
+    [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)))
+    ]
 
 view : Model -> Html Msg
 view model =
@@ -307,8 +309,7 @@ view model =
                         [ Html.h3 []
                             [ Html.text "Mit eget SET-spil"
                             ]
-                        , (Html.text ("Spillere: " ++ (String.fromInt (List.length model.totalPlayers))))
-                        , (Html.text ("Point: " ++ (String.fromInt (List.length model.totalPlayers))))
+                        , Html.div [] (List.map displayPlayerInfo model.totalPlayers)
                         , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
                         ],
                         Html.main_ []
