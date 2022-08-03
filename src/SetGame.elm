@@ -47,8 +47,14 @@ type alias Card =
 
 -- CONSTANTS (Her finder du "konstanter" eller eksempeldata, som du kan bruge til at tjekke dine funktioner med)
 
+numberToInt: Number -> Int
+numberToInt number = 
+    case number of
+        One -> 1
+        Two -> 2
+        Three -> 3   
 
-exampleCard : Card
+exampleCard : Card 
 exampleCard =
     { shape = Squiggle
     , color = Red
@@ -138,7 +144,7 @@ update msg model =
 
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
-    Html.div [Attributes.class "card"] [  ]
+    Html.div [Attributes.class "card"] [ Html.div[Attributes.class "symbol", (shapeToClass card.shape), (shadingToClass card.shading), ((colorToClass card.color))][]   ]
 
 colorToClass : Color -> Attribute Msg
 colorToClass color =
@@ -177,9 +183,7 @@ view model =
             ]
         , Html.main_ []
             [ Html.div [][
-                Html.div [Attributes.class "symbol red solid squiggle"][],
-                Html.div [Attributes.class "symbol red solid squiggle"][]
-
+                Html.div [][(viewCard [] exampleCard)]
             ] ]
         ]
 
