@@ -92,7 +92,6 @@ type alias Model =
     { replaceMe : ()
     }
 
-
 fullDeck : List Card
 fullDeck =
     {- TODO -}
@@ -135,10 +134,55 @@ update msg model =
 
 -- VIEW
 
+colortoClass : Color -> Attribute Msg
+colortoClass color =
+    case color of
+        Green ->
+            Attributes.class "green"
+        Purple ->
+            Attributes.class "purple"
+        Red ->
+            Attributes.class "red"
+
+shapetoClass : Shape -> Attribute Msg
+shapetoClass shape =
+    case shape of
+        Squiggle ->
+            Attributes.class "squiggle"
+        Diamond ->
+            Attributes.class "diamond"
+        Oval ->
+            Attributes.class "oval"
+
+shadingtoClass : Shading -> Attribute Msg
+shadingtoClass shading =
+    case shading of
+        Open ->
+            Attributes.class "solid"
+        Striped ->
+            Attributes.class "striped"
+        Solid ->
+            Attributes.class "solid"
+
+numbertoInt : Number -> Int
+numbertoInt number = 
+    case number of
+        One -> 1
+        Two -> 2
+        Three -> 3
 
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
-    Html.div [] [ Html.text "todo" ]
+    Html.div [Attributes.class "card"] 
+        (List.repeat (numbertoInt card.number) (Html.div 
+        [Attributes.class "symbol",
+        (shadingtoClass card.shading), 
+        (colortoClass card.color), 
+        (shapetoClass card.shape)] []))
+
+viewRow : List Card -> Html Msg
+viewRow cards =
+    Html.div [Attributes.class "row"] (List.map (viewCard []) cards)
 
 
 viewTable : List Card -> List Card -> Html Msg
@@ -155,7 +199,7 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [ Html.text "Her skal dit SET-spil være" ]
+            [(viewRow (List.repeat 5 exampleCard))]
         ]
 
 
