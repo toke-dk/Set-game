@@ -97,7 +97,8 @@ myTable =
 
 type alias Model = { 
     table : List Card,
-    selection : List Card
+    selection : List Card,
+    besked : String
     }
 
 
@@ -116,7 +117,8 @@ randomDeck number =
 init : Model
 init =
     { table = myTable,
-     selection = [{ shape = Oval, color = Green, shading = Open, number = Two }]
+     selection = [{ shape = Oval, color = Green, shading = Open, number = Two }],
+     besked = ""
     }
 
 
@@ -127,12 +129,17 @@ init =
 type Msg
     = Selected Card
     | ResetSelection (List Card)
+    | Set
 
+smartIsSet : a -> a -> a -> Bool
+smartIsSet x y z = ((x == y && y == z) || (x /= y && y /= z)) 
 
 isSet : Card -> Card -> Card -> Bool
 isSet x y z =
-    {- TODO -}
-    False
+    (smartIsSet x.color y.color z.color) 
+    && (smartIsSet x.shading y.shading z.shading)
+    && (smartIsSet x.shape y.shape z.shape)
+    && (smartIsSet x.number y.number z.number)
 
 
 update : Msg -> Model -> Model
@@ -143,6 +150,15 @@ update msg model =
                 True -> {model | selection = card :: model.selection}
                 False -> model
         ResetSelection cards -> {model | selection = []}
+        Set -> case model.selection of
+            x :: y :: z :: rest ->
+                case (isSet x y z) of 
+                    True ->
+                        {model | besked = "Korrekt!", selection = []}
+                    False ->
+                        {model | besked = "Fejl!", selection = []}
+            rest ->
+                model
 
 
 
@@ -216,7 +232,9 @@ view model =
         , Html.main_ []
             [ Html.div [][
                 Html.div [][viewTable model.selection model.table],
-                Html.div [][(Html.button [Events.onClick (ResetSelection model.selection)][Html.text "Reset"])]
+                Html.div [][(Html.button [Events.onClick (ResetSelection model.selection)][Html.text "Reset"])],
+                Html.div [][Html.text model.besked],
+                Html.div [][(Html.button [Events.onClick Set][Html.text "Check set"])]
             ] ]
         ]
 
