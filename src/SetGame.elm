@@ -6,7 +6,9 @@ import Html.Attributes as Attributes
 import Html.Events as Events
 import Random
 import Random.List
-import List exposing (length)
+import List exposing (length, filter)
+import Html exposing (a)
+import Random.Extra exposing (bool)
 
 
 
@@ -120,8 +122,14 @@ init =
 
 type Msg
     = Select Card
-    | ResetSelections
-    | SET
+
+removeHelp : a -> a -> Bool
+removeHelp x y = 
+    x /= y
+
+remove : a -> List a -> List a
+remove a listA =
+    (filter (removeHelp a) listA)
 
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
@@ -140,24 +148,23 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Select card ->
-            case (length model.selection < 3) of
-                True -> {model | selection = card :: model.selection, 
-                        message = ""}
-                False -> {model | message = ""}
-        ResetSelections ->
-            {model | selection = []}
-        SET ->
-            case model.selection of
-                x :: y :: z :: rest ->
-                    case (isSet x y z) of
-                        True ->
-                            {model | message = "Det er et SET", selection = []}
-                        False ->
-                            {model | message = "Der er ikke et SET", selection = []}
-                rest ->
-                    model
-            
-
+            case (List.member card model.selection) of
+                False ->
+                    case (length model.selection == 2) of
+                        False -> --0 eller 1 kort er valgt
+                            {model | selection = card :: model.selection}
+                        True -> --2 kort er valgt
+                            case model.selection of
+                                x :: y :: rest ->
+                                    case (isSet x y card) of
+                                        True ->
+                                            {model | selection = []}
+                                        False ->
+                                            {model | selection = []}
+                                rest ->
+                                    model
+                True ->
+                    {model | selection = (remove card model.selection)}
 
 
 -- VIEW
@@ -208,7 +215,8 @@ getCardAttribute selection card =
 
 viewCard : List Card -> Card -> Html Msg
 viewCard selection card =
-    Html.div [(getCardAttribute selection card), Events.onClick (Select card)] 
+    Html.div [(getCardAttribute selection card), Events.onClick (Select card)
+        ] 
         (List.repeat (numbertoInt card.number) (Html.div 
         [Attributes.class "symbol",
         (shadingtoClass card.shading), 
@@ -242,9 +250,7 @@ view model =
         [ Html.header []
             [ Html.h3 []
                 [ Html.text "Mit eget SET-spil"
-                ], Html.button [Events.onClick ResetSelections] [Html.text "RESET"],
-                Html.button [Events.onClick SET] [Html.text "Set"],
-                Html.text model.message
+                ],Html.text model.message
 
             ]
         , Html.main_ []
