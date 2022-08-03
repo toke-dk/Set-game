@@ -285,13 +285,10 @@ view model =
                         [ Html.h3 []
                             [ Html.text "Vælg spillere"
                             ]
-                        , (Html.text model.besked)
-                        , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
+                        ,   (Html.text ("Spillere i alt: '" ++ (String.fromInt model.amountOfPlayers) ++ "' "))
                         ],
                         Html.div [] [
 
-                            Html.h3 [] [Html.text "Vælg antallet af spillere"],
-                            Html.h4 [] [Html.text ("Antallet af spillere: " ++ (String.fromInt model.amountOfPlayers))],
                             Html.button [Events.onClick AddAPlayer][Html.text "Tilføj spiller"],
                             Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
 
