@@ -9,6 +9,8 @@ import Random.List
 import Html exposing (select)
 import Html.Attributes exposing (selected)
 import List exposing (length)
+import Html exposing (a)
+import List exposing (filter)
 
 
 
@@ -124,7 +126,15 @@ init =
 type Msg
     = Select Card
     | Reset
-    | Set
+
+removeHelp : a -> a -> Bool
+removeHelp a b =
+    (a /= b)
+
+remove : a -> List a -> List a
+remove c cards =
+    (List.filter (removeHelp c) cards)
+
 
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
@@ -142,23 +152,27 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Select c->
-            case ((length model.selection) == 3) of
-                False -> 
-                    {model | selection = c :: model.selection}
-                True -> 
-                    {model | selection = []}
+            case (List.member c model.selection) of
+                False ->
+                    case ((length model.selection) == 2) of
+                        False -> 
+                            {model | selection = c :: model.selection}
+                        True -> 
+                            case model.selection of
+                                x :: y :: rest ->
+                                    case (isSet x y c) of
+                                        True ->
+                                            {model | besked = "Det er et set"
+                                            , table = (remove c (remove y (remove x model.table)))
+                                            , selection = []}
+                                        False ->
+                                            {model | besked = "Det er ikke et set", selection = []}
+                                rest ->
+                                    model
+                True ->
+                    {model | selection = (remove c model.selection)}
         Reset ->
             {model | selection = []}
-        Set ->
-            case model.selection of
-                x :: y :: z :: rest ->
-                    case (isSet x y z) of
-                        True ->
-                            {model | besked = "Det er et set"}
-                        False ->
-                            {model | besked = "Det er ikke et set", selection = []}
-                rest ->
-                    model
 
 
 -- VIEW
@@ -243,9 +257,7 @@ view model =
                 [ Html.text "Mit eget SET-spil"
                 ]
             , Html.h3 []
-                [ Html.button [Events.onClick Set] 
-                        [Html.text "Set"]
-                , Html.text model.besked
+                [ Html.text model.besked
                 , Html.button [Events.onClick Reset]
                         [Html.text "Reset"]]
             ]
