@@ -6,6 +6,9 @@ import Html.Attributes as Attributes
 import Html.Events as Events
 import Random
 import Random.List
+import Html exposing (select)
+import Html.Attributes exposing (selected)
+import List exposing (length)
 
 
 
@@ -90,6 +93,8 @@ myTable =
 
 type alias Model =
     { table : List Card
+    , selection : List Card
+    , besked : String
     }
 
 fullDeck : List Card
@@ -106,7 +111,9 @@ randomDeck number =
 
 init : Model
 init =
-    { table = (List.repeat 12 exampleCard)
+    { table = myTable
+    , selection = []
+    , besked = ""
     }
 
 
@@ -115,21 +122,43 @@ init =
 
 
 type Msg
-    = ReplaceMe
+    = Select Card
+    | Reset
+    | Set
 
+smartIsSet : a -> a -> a -> Bool
+smartIsSet x y z =
+   ((x == y && y == z) || (x /= y && y /= z && x /= z))
 
 isSet : Card -> Card -> Card -> Bool
 isSet x y z =
-    {- TODO -}
-    False
+    ((smartIsSet x.color y.color z.color)
+    && (smartIsSet x.number y.number z.number)
+    && (smartIsSet x.shading y.shading z.shading)
+    && (smartIsSet x.shape y.shape z.shape))
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ReplaceMe ->
-            model
-
+        Select c->
+            case ((length model.selection) == 3) of
+                False -> 
+                    {model | selection = c :: model.selection}
+                True -> 
+                    {model | selection = []}
+        Reset ->
+            {model | selection = []}
+        Set ->
+            case model.selection of
+                x :: y :: z :: rest ->
+                    case (isSet x y z) of
+                        True ->
+                            {model | besked = "Det er et set"}
+                        False ->
+                            {model | besked = "Det er ikke et set", selection = []}
+                rest ->
+                    model
 
 
 -- VIEW
@@ -171,6 +200,14 @@ numberToInt number =
         Two -> 2
         Three -> 3
 
+cardIsSelected : List Card -> Card -> Attribute Msg
+cardIsSelected selected card =
+    case (List.member card selected) of
+        True ->
+            Attributes.class "card selected"
+        False ->
+            Attributes.class "card"
+
 buildRows : List Card -> List (List Card)
 buildRows cards =
     case cards of
@@ -180,34 +217,40 @@ buildRows cards =
             []
 
 viewCard : List Card -> Card -> Html Msg
-viewCard _ card =
-    Html.div [Attributes.class "card"] 
+viewCard selected card =
+    Html.div [(cardIsSelected selected card), Events.onClick (Select card)] 
         (List.repeat (numberToInt card.number) (Html.div 
-        [Attributes.class "symbol",
-        (shadingToClass card.shading), 
-        (colorToClass card.color), 
-        (shapeToClass card.shape)] []))
+        [ Attributes.class "symbol"
+        , (shadingToClass card.shading)
+        , (colorToClass card.color)
+        , (shapeToClass card.shape)][]))
 
-viewRow : List Card -> Html Msg
-viewRow cards =
+viewRow : List Card -> List Card -> Html Msg
+viewRow selected cards =
     Html.div [Attributes.class "row"] 
-        (List.map (viewCard []) cards)
+        (List.map (viewCard selected) cards)
 
 viewTable : List Card -> List Card -> Html Msg
-viewTable _ cards =
-    Html.div [] (List.map viewRow (buildRows cards))
+viewTable selected cards =
+    Html.div [Attributes.class "table"] (List.map (viewRow selected) (buildRows cards))
 
 
 view : Model -> Html Msg
 view model =
     Html.div []
         [ Html.header []
-            [ Html.h3 []
+            [ Html.h1 []
                 [ Html.text "Mit eget SET-spil"
                 ]
+            , Html.h3 []
+                [ Html.button [Events.onClick Set] 
+                        [Html.text "Set"]
+                , Html.text model.besked
+                , Html.button [Events.onClick Reset]
+                        [Html.text "Reset"]]
             ]
         , Html.main_ []
-            [(viewTable [] model.table)]
+            [(viewTable model.selection model.table)]
         ]
 
 
