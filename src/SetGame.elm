@@ -89,7 +89,7 @@ myTable =
 
 
 type alias Model =
-    { replaceMe : ()
+    { table : List Card
     }
 
 fullDeck : List Card
@@ -106,7 +106,7 @@ randomDeck number =
 
 init : Model
 init =
-    { replaceMe = ()
+    { table = (List.repeat 12 exampleCard)
     }
 
 
@@ -171,6 +171,14 @@ numberToInt number =
         Two -> 2
         Three -> 3
 
+buildRows : List Card -> List (List Card)
+buildRows cards =
+    case cards of
+        x :: y :: z :: rest ->
+            [x,y,z] :: (buildRows rest)
+        rest ->
+            []
+
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
     Html.div [Attributes.class "card"] 
@@ -187,7 +195,7 @@ viewRow cards =
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
-    Html.div [] [ Html.div [] [ Html.text "todo" ] ]
+    Html.div [] (List.map viewRow (buildRows cards))
 
 
 view : Model -> Html Msg
@@ -199,7 +207,7 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [(viewRow (List.repeat 3 exampleCard))]
+            [(viewTable [] model.table)]
         ]
 
 
