@@ -143,6 +143,7 @@ type Msg
     | MoreCards
     | ChangeReadyState Bool
     | AddAPlayer
+    | ChangePoints PlayerAlias Int
 
 removeHelp : a -> a -> Bool
 removeHelp a b = (a /= b)
@@ -186,6 +187,7 @@ update msg model =
         MoreCards -> { model | cardPile = (List.drop 3 model.cardPile), table = (List.append model.table (List.take 3 model.cardPile)) }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
+        ChangePoints player points -> model
         -- change
 
 
@@ -282,7 +284,8 @@ viewTable selected cards =
 
 displayPlayerInfo : PlayerAlias -> Html Msg
 displayPlayerInfo playerInfo = Html.div[] 
-    [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)))
+    [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)) ++ " ")
+    , (Html.button [Events.onClick (ChangePoints playerInfo 1)][Html.text "+1"])
     ]
 
 view : Model -> Html Msg
