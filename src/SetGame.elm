@@ -11,6 +11,8 @@ import Html.Attributes exposing (selected)
 import List exposing (length)
 import Html exposing (a)
 import List exposing (filter)
+import List exposing (concatMap)
+import Random exposing (initialSeed)
 
 
 
@@ -91,31 +93,58 @@ myTable =
 
 
 -- MODEL
+genCardColor : Card -> List Card
+genCardColor card =
+    [ {card | color = Red}
+    , {card | color = Purple}
+    , {card | color = Green}]
 
+genCardShape : Card -> List Card
+genCardShape card =
+    [ {card | shape = Oval}
+    , {card | shape = Squiggle}
+    , {card | shape = Diamond}]
+
+genCardShading : Card -> List Card
+genCardShading card =
+    [ {card | shading = Open}
+    , {card | shading = Striped}
+    , {card | shading = Solid}]
+
+genCardNumber : Card -> List Card
+genCardNumber card =
+    [ {card | number = One}
+    , {card | number = Two}
+    , {card | number = Three}]
 
 type alias Model =
     { table : List Card
     , selection : List Card
     , besked : String
+    , cardPile : List Card
     }
 
 fullDeck : List Card
 fullDeck =
-    {- TODO -}
-    [ exampleCard, exampleCard ]
+    (concatMap genCardShape
+        (concatMap genCardShading
+        (concatMap genCardNumber 
+    (genCardColor exampleCard))))
 
 
 randomDeck : Int -> List Card
 randomDeck number =
-    {- TODO -}
-    [ exampleCard ]
-
+    let
+        (deck, seed1) = (Random.step (Random.List.shuffle fullDeck) (Random.initialSeed number))
+    in
+        deck
 
 init : Model
 init =
-    { table = myTable
+    { table = List.take 12 (randomDeck 42)
     , selection = []
     , besked = ""
+    , cardPile = List.drop 12 (randomDeck 42)
     }
 
 
@@ -126,6 +155,7 @@ init =
 type Msg
     = Select Card
     | Reset
+    | MoreCards
 
 removeHelp : a -> a -> Bool
 removeHelp a b =
@@ -162,17 +192,20 @@ update msg model =
                                 x :: y :: rest ->
                                     case (isSet x y c) of
                                         True ->
-                                            {model | besked = "Det er et set"
-                                            , table = (remove c (remove y (remove x model.table)))
+                                            {model | table = List.append (remove c (remove y (remove x model.table))) (List.take 3 model.cardPile)
+                                            , cardPile = List.drop 3 model.cardPile
                                             , selection = []}
                                         False ->
-                                            {model | besked = "Det er ikke et set", selection = []}
+                                            {model | selection = []}
                                 rest ->
                                     model
                 True ->
                     {model | selection = (remove c model.selection)}
         Reset ->
             {model | selection = []}
+        MoreCards ->
+            { model | table = List.append model.table (List.take 3 model.cardPile)
+            , cardPile = List.drop 3 model.cardPile}
 
 
 -- VIEW
@@ -259,7 +292,10 @@ view model =
             , Html.h3 []
                 [ Html.text model.besked
                 , Html.button [Events.onClick Reset]
-                        [Html.text "Reset"]]
+                        [Html.text "Reset"]
+                , Html.button [Events.onClick MoreCards]
+                        [Html.text "More Cards"]
+                ]
             ]
         , Html.main_ []
             [(viewTable model.selection model.table)]
