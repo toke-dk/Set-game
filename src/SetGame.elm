@@ -140,12 +140,27 @@ viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
     Html.div [Attributes.class "card"] [  ]
 
-colorToClass : Color -> Html Msg
+colorToClass : Color -> Attribute Msg
 colorToClass color =
     case color of 
         Green -> Attributes.class "green"
         Red -> Attributes.class "red"
         Purple -> Attributes.class "purple"
+
+shapeToClass : Shape -> Attribute Msg
+shapeToClass shape =
+    case shape of 
+        Diamond -> Attributes.class "diamond"
+        Oval -> Attributes.class "oval"
+        Squiggle -> Attributes.class "squiggle"
+
+
+shadingToClass : Shading -> Attribute Msg
+shadingToClass shading =
+    case shading of 
+        Open -> Attributes.class "open"
+        Striped -> Attributes.class "striped"
+        Solid -> Attributes.class "solid"
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
