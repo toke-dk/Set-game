@@ -10,7 +10,7 @@ import Random.List
 
 
 -- CARD (Denne sektion definerer Card typen)
-
+--test
 
 type Shape
     = Diamond
@@ -92,7 +92,6 @@ type alias Model =
     { replaceMe : ()
     }
 
-
 fullDeck : List Card
 fullDeck =
     {- TODO -}
@@ -134,8 +133,9 @@ update msg model =
 
 
 -- VIEW
-clolorToClass : Color -> Attribute Msg
-clolorToClass color =
+
+colorToClass : Color -> Attribute Msg
+colorToClass color =
     case color of
         Green ->
             Attributes.class "green"
@@ -174,15 +174,15 @@ numberToInt number =
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
     Html.div [Attributes.class "card"] 
-        (List.repeat (numberToInt card.number) 
-        (Html.div [Attributes.class "symbol"
-        , (shapeToClass card.shape)
-        , (shadingToClass card.shading)
-        , (clolorToClass card.color)] []))
+        (List.repeat (numberToInt card.number) (Html.div 
+        [Attributes.class "symbol",
+        (shadingToClass card.shading), 
+        (colorToClass card.color), 
+        (shapeToClass card.shape)] []))
 
 viewRow : List Card -> Html Msg
-viewRow c =
-    Html.div [Attributes.class "row"] (List.map (viewCard []) c)
+viewRow cards =
+    Html.div [Attributes.class "row"] (List.map (viewCard []) cards)
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
