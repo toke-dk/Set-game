@@ -134,12 +134,55 @@ update msg model =
 
 
 -- VIEW
+clolorToClass : Color -> Attribute Msg
+clolorToClass color =
+    case color of
+        Green ->
+            Attributes.class "green"
+        Purple ->
+            Attributes.class "purple"
+        Red ->
+            Attributes.class "red"
 
+shapeToClass : Shape -> Attribute Msg
+shapeToClass shape =
+    case shape of
+        Diamond ->
+            Attributes.class "diamond"
+        Oval ->
+            Attributes.class "oval"
+        Squiggle ->
+            Attributes.class "squiggle"
+
+shadingToClass : Shading -> Attribute Msg
+shadingToClass shading =
+    case shading of
+        Open ->
+            Attributes.class "open"
+        Striped ->
+            Attributes.class "striped"
+        Solid ->
+            Attributes.class "solid"
+
+numberToInt : Number -> Int
+numberToInt number =
+    case number of
+        One -> 1
+        Two -> 2
+        Three -> 3
 
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
-    Html.div [] [ Html.text "todo" ]
+    Html.div [Attributes.class "card"] 
+        (List.repeat (numberToInt card.number) 
+        (Html.div [Attributes.class "symbol"
+        , (shapeToClass card.shape)
+        , (shadingToClass card.shading)
+        , (clolorToClass card.color)] []))
 
+viewRow : List Card -> Html Msg
+viewRow c =
+    Html.div [Attributes.class "row"] (List.map (viewCard []) c)
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
@@ -155,7 +198,7 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [ Html.text "Her skal dit SET-spil være" ]
+            [(viewRow (List.repeat 5 exampleCard))]
         ]
 
 
