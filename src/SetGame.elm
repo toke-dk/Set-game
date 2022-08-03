@@ -90,7 +90,8 @@ myTable =
 
 type alias Model =
     { table : List Card,
-    selection : List Card
+    selection : List Card,
+    message : String
     }
 
 fullDeck : List Card
@@ -108,7 +109,8 @@ randomDeck number =
 init : Model
 init =
     { table = myTable,
-    selection = []
+    selection = [],
+    message = ""
     }
 
 
@@ -119,12 +121,19 @@ init =
 type Msg
     = Select Card
     | ResetSelections
+    | SET
 
+smartIsSet : a -> a -> a -> Bool
+smartIsSet x y z =
+    ((x==y && y==z) || (x /= y && y /= z && z /= x))
 
 isSet : Card -> Card -> Card -> Bool
 isSet x y z =
- --   case (x.color == y.color == z.color)
-    False
+    (smartIsSet x.color y.color z.color) 
+    && (smartIsSet x.shape y.shape z.shape) 
+    && (smartIsSet x.number y.number z.number) 
+    && (smartIsSet x.shading y.shading z.shading)
+
 
 
 update : Msg -> Model -> Model
@@ -132,10 +141,22 @@ update msg model =
     case msg of
         Select card ->
             case (length model.selection < 3) of
-                True -> {model | selection = card :: model.selection}
-                False -> model
+                True -> {model | selection = card :: model.selection, 
+                        message = ""}
+                False -> {model | message = ""}
         ResetSelections ->
             {model | selection = []}
+        SET ->
+            case model.selection of
+                x :: y :: z :: rest ->
+                    case (isSet x y z) of
+                        True ->
+                            {model | message = "Det er et SET", selection = []}
+                        False ->
+                            {model | message = "Der er ikke et SET", selection = []}
+                rest ->
+                    model
+            
 
 
 
@@ -221,11 +242,13 @@ view model =
         [ Html.header []
             [ Html.h3 []
                 [ Html.text "Mit eget SET-spil"
-                ]
+                ], Html.button [Events.onClick ResetSelections] [Html.text "RESET"],
+                Html.button [Events.onClick SET] [Html.text "Set"],
+                Html.text model.message
+
             ]
         , Html.main_ []
-            [(viewTable model.selection model.table),
-            Html.button [Events.onClick ResetSelections] [Html.text "RESET"]
+            [(viewTable model.selection model.table)
             ]
         ]
 
