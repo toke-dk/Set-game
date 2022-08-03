@@ -161,6 +161,15 @@ isSet x y z =
     && (smartIsSet x.shape y.shape z.shape)
     && (smartIsSet x.number y.number z.number)
 
+changePointsFunction : Model -> PlayerAlias -> Model
+changePointsFunction model player = 
+    case (List.head model.totalPlayers) of
+        Nothing -> model
+        Just p -> case (player == p) of
+            True -> {model | totalPlayers = {p | points = (p.points + 1)} :: (List.drop 1 model.totalPlayers) }
+            False -> {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } player).totalPlayers}
+        
+
 
 update : Msg -> Model -> Model
 update msg model =
@@ -187,7 +196,7 @@ update msg model =
         MoreCards -> { model | cardPile = (List.drop 3 model.cardPile), table = (List.append model.table (List.take 3 model.cardPile)) }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
-        ChangePoints player points -> model
+        ChangePoints player points -> changePointsFunction model player
         -- change
 
 
