@@ -131,6 +131,12 @@ type Msg
     | ResetSelection (List Card)
     | Set
 
+removeHelp : a -> a -> Bool
+removeHelp a b = (a /= b)
+
+remove : a -> List(a) -> List(a)
+remove card cards = (List.filter (removeHelp card) cards)
+
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z = ((x == y && y == z) || (x /= y && y /= z && x /= z)) 
 
@@ -146,19 +152,29 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Selected card -> 
-            case ((length model.selection) < 3) of
-                True -> {model | selection = card :: model.selection}
-                False -> model
+            case ((length model.selection) == 3) of
+                True -> case model.selection of
+                    x :: y :: z :: rest ->
+                        case (isSet x y z) of 
+                            True ->
+                                {model | besked = "Korrekt!", selection = []}
+                            False ->
+                                {model | besked = "Fejl!", selection = []}
+                    rest ->
+                        model
+                False -> {model | selection = card :: model.selection}
         ResetSelection cards -> {model | selection = []}
-        Set -> case model.selection of
-            x :: y :: z :: rest ->
-                case (isSet x y z) of 
-                    True ->
-                        {model | besked = "Korrekt!", selection = []}
-                    False ->
-                        {model | besked = "Fejl!", selection = []}
-            rest ->
-                model
+        Set -> model
+        -- case model.selection of
+            -- x :: y :: z :: rest ->
+            --     case (isSet x y z) of 
+            --         True ->
+            --         -- table = remove model.table model.selection
+            --             {model | besked = "Korrekt!", selection = []}
+            --         False ->
+            --             {model | besked = "Fejl!", selection = []}
+            -- rest ->
+            --     model
 
 
 
