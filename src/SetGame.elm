@@ -161,13 +161,13 @@ isSet x y z =
     && (smartIsSet x.shape y.shape z.shape)
     && (smartIsSet x.number y.number z.number)
 
-changePointsFunction : Model -> PlayerAlias -> Model
-changePointsFunction model player = 
+changePointsFunction : Model -> PlayerAlias -> Int -> Model
+changePointsFunction model player points = 
     case (List.head model.totalPlayers) of
         Nothing -> model
         Just p -> case (player == p) of
-            True -> {model | totalPlayers = {p | points = (p.points + 1)} :: (List.drop 1 model.totalPlayers) }
-            False -> {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } player).totalPlayers}
+            True -> {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
+            False -> {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } player points).totalPlayers}
         
 
 
@@ -196,7 +196,7 @@ update msg model =
         MoreCards -> { model | cardPile = (List.drop 3 model.cardPile), table = (List.append model.table (List.take 3 model.cardPile)) }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
-        ChangePoints player points -> changePointsFunction model player
+        ChangePoints player points -> changePointsFunction model player points
         -- change
 
 
@@ -295,6 +295,7 @@ displayPlayerInfo : PlayerAlias -> Html Msg
 displayPlayerInfo playerInfo = Html.div[] 
     [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)) ++ " ")
     , (Html.button [Events.onClick (ChangePoints playerInfo 1)][Html.text "+1"])
+    , (Html.button [Events.onClick (ChangePoints playerInfo -1)][Html.text "-1"])
     ]
 
 view : Model -> Html Msg
