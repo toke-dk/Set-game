@@ -99,7 +99,10 @@ type alias Model = {
     table : List Card,
     selection : List Card,
     besked : String,
-    cardPile : List Card
+    cardPile : List Card,
+    isReady : Bool,
+    playersTurn : Int,
+    amountOfPlayers : Int
     }
     
 
@@ -118,7 +121,10 @@ init =
     { table = List.take 12 (randomDeck 42),
      selection = [],
      besked = "",
-     cardPile = List.drop 12 (randomDeck 42)
+     cardPile = List.drop 12 (randomDeck 42),
+     isReady = False,
+     playersTurn = 1,
+     amountOfPlayers = 1
     }
 
 
@@ -131,6 +137,8 @@ type Msg
     | ResetSelection (List Card)
     | Set
     | MoreCards
+    | ChangeReadyState Bool
+    | AddAPlayer
 
 removeHelp : a -> a -> Bool
 removeHelp a b = (a /= b)
@@ -172,6 +180,9 @@ update msg model =
         ResetSelection cards -> {model | selection = []}
         Set -> model
         MoreCards -> { model | cardPile = (List.drop 3 model.cardPile), table = (List.append model.table (List.take 3 model.cardPile)) }
+        ChangeReadyState state -> {model | isReady = state}
+        AddAPlayer -> {model | amountOfPlayers = model.amountOfPlayers + 1}
+        -- change
 
 
 -- VIEW
@@ -267,17 +278,37 @@ viewTable selected cards =
 
 view : Model -> Html Msg
 view model =
-    Html.div []
-        [ Html.header []
-            [ Html.h3 []
-                [ Html.text "Mit eget SET-spil"
-                ]
-            , (Html.text model.besked)
-            , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
-            ],
-            Html.main_ []
-            [ Html.div [][viewTable model.selection model.table] ]
-        ]
+    case (model.isReady) of 
+            False ->
+                Html.div []
+                    [ Html.header []
+                        [ Html.h3 []
+                            [ Html.text "Vælg spillere"
+                            ]
+                        , (Html.text model.besked)
+                        , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
+                        ],
+                        Html.div [] [
+
+                            Html.h3 [] [Html.text "Vælg antallet af spillere"],
+                            Html.h4 [] [Html.text ("Antallet af spillere: " ++ (String.fromInt model.amountOfPlayers))],
+                            Html.button [Events.onClick AddAPlayer][Html.text "Tilføj spiller"],
+                            Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
+
+                        ]
+                    ]
+            True ->
+                Html.div []
+                    [ Html.header []
+                        [ Html.h3 []
+                            [ Html.text "Mit eget SET-spil"
+                            ]
+                        , (Html.text model.besked)
+                        , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
+                        ],
+                        Html.main_ []
+                        [ Html.div [][viewTable model.selection model.table] ]
+                    ]
 
 
 
