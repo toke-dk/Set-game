@@ -104,17 +104,19 @@ type alias Model = {
     
 
 randomDeck : Int -> List Card
-randomDeck number =
-    {- TODO -}
-    [ exampleCard ]
+randomDeck number = 
+    let 
+        (deck, seed1) = Random.step (Random.List.shuffle fullDeck) (Random.initialSeed number)
+    in
+        deck
 
 
 init : Model
 init =
-    { table = (List.take 12 fullDeck),
+    { table = List.take 12 (randomDeck 2),
      selection = [],
      besked = "",
-     cardPile = List.drop 12 fullDeck
+     cardPile = List.drop 12 (randomDeck 2)
     }
 
 
@@ -126,6 +128,7 @@ type Msg
     = Selected Card
     | ResetSelection (List Card)
     | Set
+    | MoreCards
 
 removeHelp : a -> a -> Bool
 removeHelp a b = (a /= b)
@@ -168,6 +171,7 @@ update msg model =
                 True -> {model | selection = (remove card model.selection)}
         ResetSelection cards -> {model | selection = []}
         Set -> model
+        MoreCards -> { model | cardPile = (List.drop 3 model.cardPile), table = (List.append model.table (List.take 3 model.cardPile)) }
 
 
 -- VIEW
@@ -260,14 +264,11 @@ view model =
             [ Html.h3 []
                 [ Html.text "Mit eget SET-spil"
                 ]
-            ]
-        , Html.main_ []
-            [ Html.div [][
-                Html.div [][viewTable model.selection model.table],
-                Html.div [][(Html.button [Events.onClick (ResetSelection model.selection)][Html.text "Reset"])],
-                Html.div [][Html.text model.besked],
-                Html.div [][(Html.button [Events.onClick Set][Html.text "Check set"])]
-            ] ]
+            , (Html.text model.besked)
+            , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
+            ],
+            Html.main_ []
+            [ Html.div [][viewTable model.selection model.table] ]
         ]
 
 
