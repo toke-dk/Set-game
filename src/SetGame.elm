@@ -10,7 +10,6 @@ import Random.List
 
 
 -- CARD (Denne sektion definerer Card typen)
---test
 
 type Shape
     = Diamond
@@ -89,7 +88,7 @@ myTable =
 
 
 type alias Model =
-    { replaceMe : ()
+    { table : List Card
     }
 
 fullDeck : List Card
@@ -106,7 +105,7 @@ randomDeck number =
 
 init : Model
 init =
-    { replaceMe = ()
+    { table = myTable
     }
 
 
@@ -185,10 +184,18 @@ viewRow cards =
     Html.div [Attributes.class "row"] 
         (List.map (viewCard []) cards)
 
+buildRows: List Card -> List (List Card)
+buildRows cards =
+    case cards of
+        x :: y :: z :: rest ->
+            [x, y, z] :: (buildRows rest)
+        rest ->
+            []
+
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
-    Html.div [] [ Html.div [] [ Html.text "todo" ] ]
+    Html.div [Attributes.class "table"] (List.map viewRow (buildRows cards)) 
 
 
 view : Model -> Html Msg
@@ -200,7 +207,7 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [(viewRow (List.repeat 3 exampleCard))]
+            [(viewTable [] model.table)]
         ]
 
 
