@@ -138,8 +138,14 @@ update msg model =
 
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
-    Html.div [] [ Html.text "todo" ]
+    Html.div [Attributes.class "card"] [  ]
 
+colorToClass : Color -> Html Msg
+colorToClass color =
+    case color of 
+        Green -> Attributes.class "green"
+        Red -> Attributes.class "red"
+        Purple -> Attributes.class "purple"
 
 viewTable : List Card -> List Card -> Html Msg
 viewTable _ cards =
@@ -155,7 +161,11 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [ Html.text "Her skal dit SET-spil være" ]
+            [ Html.div [][
+                Html.div [Attributes.class "symbol red solid squiggle"][],
+                Html.div [Attributes.class "symbol red solid squiggle"][]
+
+            ] ]
         ]
 
 
