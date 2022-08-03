@@ -6,6 +6,7 @@ import Html.Attributes as Attributes
 import Html.Events as Events
 import Random
 import Random.List
+import List exposing (length)
 
 
 
@@ -117,11 +118,12 @@ init =
 
 type Msg
     = Select Card
+    | ResetSelections
 
 
 isSet : Card -> Card -> Card -> Bool
 isSet x y z =
-    {- TODO -}
+ --   case (x.color == y.color == z.color)
     False
 
 
@@ -129,7 +131,11 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Select card ->
-            {model | selection = card :: model.selection}
+            case (length model.selection < 3) of
+                True -> {model | selection = card :: model.selection}
+                False -> model
+        ResetSelections ->
+            {model | selection = []}
 
 
 
@@ -218,7 +224,9 @@ view model =
                 ]
             ]
         , Html.main_ []
-            [(viewTable model.selection model.table)]
+            [(viewTable model.selection model.table),
+            Html.button [Events.onClick ResetSelections] [Html.text "RESET"]
+            ]
         ]
 
 
