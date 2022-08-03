@@ -141,10 +141,19 @@ update msg model =
 
 -- VIEW
 
+viewRow: Card -> Card -> Card -> Html Msg
+viewRow firstCard secondCard thirdCard =
+    Html.div [Attributes.class "row"]
+        [(viewCard [] exampleCard), (viewCard [] exampleCard), (viewCard [] exampleCard)]
 
 viewCard : List Card -> Card -> Html Msg
 viewCard _ card =
-    Html.div [Attributes.class "card"] [ Html.div[Attributes.class "symbol", (shapeToClass card.shape), (shadingToClass card.shading), ((colorToClass card.color))][]   ]
+    Html.div [Attributes.class "card"] 
+        (List.repeat (numberToInt card.number) (Html.div
+            [Attributes.class "symbol", 
+            (shapeToClass card.shape), 
+            (shadingToClass card.shading),
+            (colorToClass card.color)] [])) 
 
 colorToClass : Color -> Attribute Msg
 colorToClass color =
@@ -183,7 +192,7 @@ view model =
             ]
         , Html.main_ []
             [ Html.div [][
-                Html.div [][(viewCard [] exampleCard)]
+                Html.div [][(viewRow exampleCard exampleCard exampleCard)]
             ] ]
         ]
 
