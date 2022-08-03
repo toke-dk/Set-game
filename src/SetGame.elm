@@ -162,8 +162,7 @@ update msg model =
                                     True ->
                                         moreThanTwelve {model | besked = "Korrekt!"
                                         , selection = []
-                                        , table = (remove x (remove card model.table))
-                                        }
+                                        , table = (remove y (remove x (remove card model.table)))}
                                     False ->
                                         {model | besked = "Fejl!", selection = []}
                             rest ->
