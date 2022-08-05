@@ -129,7 +129,8 @@ type alias Model = {
     besked : String,
     cardPile : List Card,
     isReady : Bool,
-    totalPlayers : List PlayerAlias
+    totalPlayers : List PlayerAlias,
+    currentPlayer : PlayerAlias
     }
 
 type alias PlayerAlias = {
@@ -144,7 +145,9 @@ init =
      besked = "",
      cardPile = List.drop 12 (randomDeck 42),
      isReady = False,  
-     totalPlayers = [{id = 0, points = 0}]  }
+     totalPlayers = [{id = 0, points = 0}],
+     currentPlayer = {id = 0, points = 0}
+    }
 
 fullDeck : List Card
 fullDeck =
@@ -173,15 +176,17 @@ type Msg
     | MoreCards
     | ChangeReadyState Bool
     | AddAPlayer
-    | ChangePoints PlayerAlias Int
+    | ChangeCurrentPlayer PlayerAlias
 
-changePointsFunction : Model -> PlayerAlias -> Int -> Model
-changePointsFunction model player points = 
+changePointsFunction : Model -> Int -> Model
+changePointsFunction model points = 
     case (List.head model.totalPlayers) of
         Nothing -> model
-        Just p -> case (player == p) of
-            True -> {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
-            False -> {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } player points).totalPlayers}
+        Just p -> case (model.currentPlayer == p) of
+            True -> 
+                {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
+            False -> 
+                {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } points).totalPlayers}
 
     
 
@@ -300,10 +305,10 @@ update msg model =
                                 x :: y :: rest ->
                                     case (isSet x y card) of
                                         True -> --fjerner kort ved set
-                                            moreThanTwelve [x,y,card] {model | selection = [] }
+                                            moreThanTwelve [x,y,card] {model | selection = [], totalPlayers = (changePointsFunction model 1).totalPlayers}
 
                                         False -> -- fjerne selection når der ikke er set
-                                            {model | selection = []}
+                                            {model | selection = [], totalPlayers = (changePointsFunction model -1).totalPlayers}
                                 rest ->
                                     model
                 True ->
@@ -319,8 +324,7 @@ update msg model =
                     }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
-        ChangePoints player points -> changePointsFunction model player points 
-  
+        ChangeCurrentPlayer player -> {model | currentPlayer = player}  
 
 
 -- VIEW
@@ -408,8 +412,7 @@ viewTable selection cards =
 displayPlayerInfo : PlayerAlias -> Html Msg
 displayPlayerInfo playerInfo = Html.div[] 
     [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)) ++ " ")
-    , (Html.button [Events.onClick (ChangePoints playerInfo 1)][Html.text "+1"])
-    , (Html.button [Events.onClick (ChangePoints playerInfo -1)][Html.text "-1"])
+    , (Html.button [Events.onClick (ChangeCurrentPlayer playerInfo)][Html.text "SET!"])
     ]
 
 view : Model -> Html Msg
