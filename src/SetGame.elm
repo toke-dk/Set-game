@@ -134,7 +134,8 @@ type alias Model = {
     isReady : Bool,
     totalPlayers : List PlayerAlias,
     currentPlayers : List (Maybe PlayerAlias),
-    seed : String
+    seed : Int,
+    seedMsg : String 
     }
 
 type alias PlayerAlias = {
@@ -151,7 +152,8 @@ init =
      isReady = False,  
      totalPlayers = [{id = 0, points = 0}],
      currentPlayers = [],
-     seed = ""
+     seed = 0,
+     seedMsg = ""
     }
 
 fullDeck : List Card
@@ -334,7 +336,14 @@ update msg model =
                     model
                 False -> 
                     {model | currentPlayers = List.append model.currentPlayers [Just player]}
-        SetSeed seed -> {model | seed = seed}    
+        SetSeed seedString -> 
+            case (String.toInt seedString) of
+                Just seedInt -> {model | seedMsg = seedString,seed = seedInt}    
+                Nothing -> 
+                    case (String.length model.seedMsg == 1) of
+                        True -> 
+                            {model | seedMsg = ""}
+                        False -> model
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -439,8 +448,8 @@ view model =
                         , Html.button [Events.onClick (ChangeAmountOfPlayers 1)][Html.text "+1"]
                         , Html.button [Events.onClick (ChangeAmountOfPlayers -1)][Html.text "-1"]
                         , Html.p [][Html.text "Seed: "]
-                        , Html.input [value model.seed, onInput SetSeed][]
-                        , (Html.text model.seed)
+                        , Html.input [value model.seedMsg, onInput SetSeed][]
+                        , Html.text (String.fromInt model.seed)
                         ],
                         Html.div [] [
                             Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
