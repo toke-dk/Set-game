@@ -341,6 +341,7 @@ update msg model =
                                 model | isReady = state
                                 , table = List.take 12 (randomDeck seedInt)
                                 , cardPile = List.drop 12 (randomDeck seedInt)
+                                , currentPlayers = []
                             }, Cmd.none) -- den laver et nyt table og cardpile efter det nye seed
                         Nothing -> (model, Cmd.none)
                 False -> ({model | errorMessage = "Vælg et seed!"}, Cmd.none)
@@ -361,10 +362,30 @@ update msg model =
                 False -> 
                     ({model | currentPlayers = List.append model.currentPlayers [Just player]}, Cmd.none) -- tilføjer spilleren bagers i køen
         SetSeed seedString -> ({model | seedMsg = seedString}, Cmd.none) -- ændrer string hver gang man skriver i input-feltet
-        CharacterKey '1' -> ({model | errorMessage = "fd"}, Cmd.none)
+        CharacterKey char -> 
+            case ((Char.toCode char <= 57) && (Char.toCode char >= 49)) of -- hvis det er mellem 1 og 9 på keyboardet
+                True -> case (playerFromInt model ((Char.toCode char) - 48)) of -- hvis der er en spiller hvis id svarer til den trykkede tast
+                    Just player -> changeCurrentPlayer model player -- der er -48 for at få det til tallet på keyboardet
+                    Nothing -> (model, Cmd.none)
+                False -> (model, Cmd.none)
         ControlKey "fdsa" -> (model, Cmd.none)
         _ -> (model, Cmd.none)
 -- VIEW
+
+playerFromInt : Model -> Int -> Maybe PlayerAlias
+playerFromInt model int = 
+    case List.head (List.drop ((List.length model.totalPlayers)-int) model.totalPlayers) of
+        Just player -> Just player
+        Nothing -> Nothing
+
+
+changeCurrentPlayer : Model -> PlayerAlias -> (Model, Cmd Msg)
+changeCurrentPlayer model player =
+ case (List.member (Just player) model.currentPlayers) of -- hvis spilleren allerede har trykket 
+                True -> 
+                    (model, Cmd.none)
+                False -> 
+                    ({model | currentPlayers = List.append model.currentPlayers [Just player]}, Cmd.none) 
 
 colorToClass : Color -> Attribute Msg
 colorToClass color =
