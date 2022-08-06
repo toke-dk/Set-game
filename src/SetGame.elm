@@ -175,7 +175,7 @@ type Msg
     = Select Card
     | MoreCards
     | ChangeReadyState Bool
-    | AddAPlayer
+    | ChangeAmountOfPlayers Int
     | ChangeCurrentPlayer PlayerAlias
 
 changePointsFunction : Model -> Int -> Model
@@ -327,7 +327,13 @@ update msg model =
                     cardPile = drop 3 model.cardPile
                     }
         ChangeReadyState state -> {model | isReady = state}
-        AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
+        ChangeAmountOfPlayers amount -> 
+            case (amount > 0) of -- Hvis man vil tilføje en spiller
+                True -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
+                False -> -- Hvis man vil fjerne en spiller
+                    case (List.length model.totalPlayers > 1) of -- Hvis der er mindst en spiller
+                        True -> {model | totalPlayers = List.drop 1 model.totalPlayers}
+                        False -> model
         ChangeCurrentPlayer player -> case (List.member (Just player) model.currentPlayers) of 
             True -> model
             False -> {model | currentPlayers = List.append model.currentPlayers [Just player]}
@@ -436,11 +442,12 @@ view model =
                         [ Html.h3 []
                             [ Html.text "Vælg spillere"
                             ]
-                        ,   (Html.text ("Spillere i alt: '" ++ (String.fromInt (List.length model.totalPlayers)) ++ "' "))
+                        , (Html.text ("Spillere i alt: '" ++ (String.fromInt (List.length model.totalPlayers)) ++ "' "))
+                        , Html.p [][]
+                        , Html.button [Events.onClick (ChangeAmountOfPlayers 1)][Html.text "+1"]
+                        , Html.button [Events.onClick (ChangeAmountOfPlayers -1)][Html.text "-1"]
                         ],
                         Html.div [] [
-
-                            Html.button [Events.onClick AddAPlayer][Html.text "Tilføj spiller"],
                             Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
 
                         ]
