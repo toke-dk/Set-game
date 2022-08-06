@@ -134,7 +134,7 @@ type alias Model = {
     isReady : Bool,
     totalPlayers : List PlayerAlias,
     currentPlayers : List (Maybe PlayerAlias),
-    seed : Int
+    seed : String
     }
 
 type alias PlayerAlias = {
@@ -151,7 +151,7 @@ init =
      isReady = False,  
      totalPlayers = [{id = 0, points = 0}],
      currentPlayers = [],
-     seed = 0
+     seed = ""
     }
 
 fullDeck : List Card
@@ -334,10 +334,7 @@ update msg model =
                     model
                 False -> 
                     {model | currentPlayers = List.append model.currentPlayers [Just player]}
-        SetSeed seed -> 
-            case (String.toInt seed) of
-                Just s -> {model | seed = s}
-                Nothing -> model    
+        SetSeed seed -> {model | seed = seed}    
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -442,8 +439,8 @@ view model =
                         , Html.button [Events.onClick (ChangeAmountOfPlayers 1)][Html.text "+1"]
                         , Html.button [Events.onClick (ChangeAmountOfPlayers -1)][Html.text "-1"]
                         , Html.p [][Html.text "Seed: "]
-                        , Html.input [onInput SetSeed][]
-                        , (Html.text (String.fromInt model.seed))
+                        , Html.input [value model.seed, onInput SetSeed][]
+                        , (Html.text model.seed)
                         ],
                         Html.div [] [
                             Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
