@@ -328,8 +328,10 @@ update msg model =
                     }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
-        ChangeCurrentPlayer player -> {model | currentPlayers = List.append model.currentPlayers [Just player]} -- skal finde en bedre måde at tilføje til det bagerste element
-
+        ChangeCurrentPlayer player -> case (List.member (Just player) model.currentPlayers) of 
+            True -> model
+            False -> {model | currentPlayers = List.append model.currentPlayers [Just player]}
+            
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
