@@ -130,7 +130,7 @@ type alias Model = {
     cardPile : List Card,
     isReady : Bool,
     totalPlayers : List PlayerAlias,
-    currentPlayer : PlayerAlias
+    currentPlayers : List (Maybe PlayerAlias)
     }
 
 type alias PlayerAlias = {
@@ -146,7 +146,7 @@ init =
      cardPile = List.drop 12 (randomDeck 42),
      isReady = False,  
      totalPlayers = [{id = 0, points = 0}],
-     currentPlayer = {id = 0, points = 0}
+     currentPlayers = []
     }
 
 fullDeck : List Card
@@ -182,12 +182,13 @@ changePointsFunction : Model -> Int -> Model
 changePointsFunction model points = 
     case (List.head model.totalPlayers) of
         Nothing -> model
-        Just p -> case (model.currentPlayer == p) of
-            True -> 
-                {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
-            False -> 
-                {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } points).totalPlayers}
-
+        Just p -> case (head model.currentPlayers) of 
+            Just currentPlayer -> case ( currentPlayer == (Just p)) of
+                True -> 
+                    {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
+                False -> 
+                    {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } points).totalPlayers}
+            Nothing -> model
     
 
 removeHelp : a -> a -> Bool
@@ -295,24 +296,27 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Select card ->
-            case (List.member card model.selection) of
-                False ->
-                    case (length model.selection == 2) of
-                        False -> --0 eller 1 kort er valgt
-                            {model | selection = card :: model.selection}
-                        True -> --2 kort er valgt
-                            case model.selection of
-                                x :: y :: rest ->
-                                    case (isSet x y card) of
-                                        True -> --fjerner kort ved set
-                                            moreThanTwelve [x,y,card] {model | selection = [], totalPlayers = (changePointsFunction model 1).totalPlayers}
+            case (head model.currentPlayers) of
+                Nothing -> model
+                Just currentPlayer ->
+                    case (List.member card model.selection) of
+                        False ->
+                            case (length model.selection == 2) of
+                                False -> --0 eller 1 kort er valgt
+                                    {model | selection = card :: model.selection}
+                                True -> --2 kort er valgt
+                                    case model.selection of
+                                        x :: y :: rest ->
+                                            case (isSet x y card) of
+                                                True -> --fjerner kort ved set
+                                                    moreThanTwelve [x,y,card] {model | selection = [], totalPlayers = (changePointsFunction model 1).totalPlayers, currentPlayers = []}
 
-                                        False -> -- fjerne selection når der ikke er set
-                                            {model | selection = [], totalPlayers = (changePointsFunction model -1).totalPlayers}
-                                rest ->
-                                    model
-                True ->
-                    {model | selection = (remove card model.selection)}
+                                                False -> -- fjerne selection når der ikke er set
+                                                    {model | selection = [], totalPlayers = (changePointsFunction model -1).totalPlayers, currentPlayers = (List.drop 1 model.currentPlayers)}
+                                        rest ->
+                                            model
+                        True ->
+                            {model | selection = (remove card model.selection)}
         MoreCards ->
             case (checkIfSet model.table []) of
                 True ->
@@ -324,8 +328,7 @@ update msg model =
                     }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
-        ChangeCurrentPlayer player -> {model | currentPlayer = player}  
-
+        ChangeCurrentPlayer player -> {model | currentPlayers = List.append model.currentPlayers [Just player]}
 
 -- VIEW
 
@@ -415,6 +418,13 @@ displayPlayerInfo playerInfo = Html.div[]
     , (Html.button [Events.onClick (ChangeCurrentPlayer playerInfo)][Html.text "SET!"])
     ]
 
+displayCurrentPlayer : List (Maybe PlayerAlias) -> Html Msg
+displayCurrentPlayer players = case (head players) of 
+    Just player -> case player of 
+        Just p -> Html.text ("SET: 'Spiller " ++ (String.fromInt (p.id + 1)) ++ "'")
+        Nothing -> Html.text ""
+    Nothing -> Html.text ""
+
 view : Model -> Html Msg
 view model =
     case (model.isReady) of 
@@ -440,6 +450,8 @@ view model =
                             [ Html.text "Mit eget SET-spil"
                             ]
                         , Html.div [] (List.map displayPlayerInfo model.totalPlayers)
+                        , Html.div [] [Html.text (model.besked)]
+                        , Html.div [] [(displayCurrentPlayer model.currentPlayers)]
                         , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
                         ],
                         Html.main_ []
