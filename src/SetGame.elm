@@ -372,12 +372,17 @@ update msg model =
         _ -> (model, Cmd.none)
 -- VIEW
 
-playerFromInt : Model -> Int -> Maybe PlayerAlias
+playerFromInt : Model -> Int -> Maybe PlayerAlias -- kan skrives flottere
 playerFromInt model int = 
-    case List.head (List.drop ((List.length model.totalPlayers)-int) model.totalPlayers) of
-        Just player -> Just player
-        Nothing -> Nothing
-
+    case (int <= List.length model.totalPlayers) of
+        True -> 
+            case List.head (List.drop ((List.length model.totalPlayers)-int) model.totalPlayers) of
+                Just player -> 
+                    Just player
+                Nothing -> 
+                    Nothing
+        False ->
+            Nothing
 
 changeCurrentPlayer : Model -> PlayerAlias -> (Model, Cmd Msg)
 changeCurrentPlayer model player =
@@ -523,6 +528,7 @@ view model =
                             ]
                         , Html.div [] (List.map displayPlayerInfo model.totalPlayers)
                         , Html.div [] [(displayCurrentPlayer model.currentPlayers)]
+                        , Html.p [] [Html.text model.errorMessage]
                         , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
                         ],
                         Html.main_ []
