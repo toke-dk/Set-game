@@ -129,7 +129,7 @@ myTable =
 type alias Model = { 
     table : List Card,
     selection : List Card,
-    besked : String,
+    errorMessage : String,
     cardPile : List Card,
     isReady : Bool,
     totalPlayers : List PlayerAlias,
@@ -147,7 +147,7 @@ init : Model
 init =
     { table = List.take 12 (randomDeck 42),
      selection = [],
-     besked = "",
+     errorMessage = "",
      cardPile = List.drop 12 (randomDeck 42),
      isReady = False,  
      totalPlayers = [{id = 0, points = 0}],
@@ -319,7 +319,10 @@ update msg model =
                     table =  List.append model.table (take 3 model.cardPile), 
                     cardPile = drop 3 model.cardPile
                     }
-        ChangeReadyState state -> {model | isReady = state}
+        ChangeReadyState state -> 
+            case (String.length model.seedMsg /= 0) of
+                True -> {model | isReady = state}
+                False -> {model | errorMessage = "Vælg et seed!"}
         ChangeAmountOfPlayers amount -> 
             case (amount > 0) of -- Hvis man vil tilføje en spiller
                 True -> 
@@ -336,14 +339,7 @@ update msg model =
                     model
                 False -> 
                     {model | currentPlayers = List.append model.currentPlayers [Just player]}
-        SetSeed seedString -> 
-            case (String.toInt seedString) of
-                Just seedInt -> {model | seedMsg = seedString,seed = seedInt}    
-                Nothing -> 
-                    case (String.length model.seedMsg == 1) of
-                        True -> 
-                            {model | seedMsg = ""}
-                        False -> model
+        SetSeed seedString -> {model | seedMsg = seedString}
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -448,7 +444,8 @@ view model =
                         , Html.button [Events.onClick (ChangeAmountOfPlayers 1)][Html.text "+1"]
                         , Html.button [Events.onClick (ChangeAmountOfPlayers -1)][Html.text "-1"]
                         , Html.p [][Html.text "Seed: "]
-                        , Html.input [value model.seedMsg, onInput SetSeed][]
+                        , Html.input [Attributes.type_ "number", value model.seedMsg, onInput SetSeed][]
+                        , Html.p [] [Html.text model.errorMessage]
                         , Html.text (String.fromInt model.seed)
                         ],
                         Html.div [] [
@@ -463,7 +460,6 @@ view model =
                             [ Html.text "Mit eget SET-spil"
                             ]
                         , Html.div [] (List.map displayPlayerInfo model.totalPlayers)
-                        , Html.div [] [Html.text (model.besked)]
                         , Html.div [] [(displayCurrentPlayer model.currentPlayers)]
                         , (Html.button [Events.onClick MoreCards][Html.text "+3 kort"])
                         ],
