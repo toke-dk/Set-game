@@ -182,13 +182,14 @@ changePointsFunction : Model -> Int -> Model
 changePointsFunction model points = 
     case (List.head model.totalPlayers) of
         Nothing -> model
-        Just p -> case (head model.currentPlayers) of 
-            Just currentPlayer -> case ( currentPlayer == (Just p)) of
-                True -> 
-                    {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
-                False -> 
-                    {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } points).totalPlayers}
-            Nothing -> model
+        Just p -> 
+            case (head model.currentPlayers) of 
+                Just currentPlayer -> case ( currentPlayer == (Just p)) of
+                    True -> 
+                        {model | totalPlayers = {p | points = (p.points  + points)} :: (List.drop 1 model.totalPlayers) }
+                    False -> 
+                        {model | totalPlayers = p :: (changePointsFunction {model | totalPlayers = (List.drop 1 model.totalPlayers) } points).totalPlayers}
+                Nothing -> model
     
 
 removeHelp : a -> a -> Bool
@@ -198,14 +199,6 @@ removeHelp a b =
 remove : a -> List a -> List a
 remove c cards =
     (List.filter (removeHelp c) cards)
-
-listremove : List a -> List a -> List a
-listremove r cards =
-    case r of
-        a :: b :: c :: rest ->
-            (remove a (remove b (remove c cards)))
-        rest ->
-            []
 
 replace : a -> a -> List a -> List a
 replace new old cards =
@@ -240,15 +233,6 @@ listReplace new old cards =
                     listReplace rest0 (remove x old) (remove x cards)
         rest0 -> 
             cards
-
-
-listRemove : List a -> List a -> List a
-listRemove r cards =
-    case r of
-        x :: y :: z :: rest ->
-            remove x (remove y (remove z cards))
-        rest ->
-            []
 
 smartIsSet : a -> a -> a -> Bool
 smartIsSet x y z =
@@ -297,7 +281,8 @@ update msg model =
     case msg of
         Select card ->
             case (head model.currentPlayers) of
-                Nothing -> model
+                Nothing -> 
+                    model
                 Just currentPlayer ->
                     case (List.member card model.selection) of
                         False ->
@@ -329,15 +314,21 @@ update msg model =
         ChangeReadyState state -> {model | isReady = state}
         ChangeAmountOfPlayers amount -> 
             case (amount > 0) of -- Hvis man vil tilføje en spiller
-                True -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
+                True -> 
+                    {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
                 False -> -- Hvis man vil fjerne en spiller
                     case (List.length model.totalPlayers > 1) of -- Hvis der er mindst en spiller
-                        True -> {model | totalPlayers = List.drop 1 model.totalPlayers}
-                        False -> model
-        ChangeCurrentPlayer player -> case (List.member (Just player) model.currentPlayers) of 
-            True -> model
-            False -> {model | currentPlayers = List.append model.currentPlayers [Just player]}
-            
+                        True -> 
+                            {model | totalPlayers = List.drop 1 model.totalPlayers}
+                        False -> 
+                            model
+        ChangeCurrentPlayer player -> 
+            case (List.member (Just player) model.currentPlayers) of 
+                True -> 
+                    model
+                False -> 
+                    {model | currentPlayers = List.append model.currentPlayers [Just player]}
+                
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -383,7 +374,6 @@ getCardAttribute selection card =
         False -> Attributes.class "card"
         True -> Attributes.class "card selected"
 
-
 viewCard : List Card -> Card -> Html Msg
 viewCard selection card =
     Html.div [(getCardAttribute selection card), Events.onClick (Select card)
@@ -408,13 +398,6 @@ buildRows cards =
         rest ->
             []
 
-getCardAtrribute :  List(Card) -> Card -> Attribute Msg
-getCardAtrribute selected card =  
-    case (List.member card selected) of
-        True -> Attributes.class "card selected"
-        False -> Attributes.class "card"
-
-
 viewTable : List Card -> List Card -> Html Msg
 viewTable selection cards =
     Html.div [Attributes.class "table"] 
@@ -429,9 +412,12 @@ displayPlayerInfo playerInfo = Html.div[]
 displayCurrentPlayer : List (Maybe PlayerAlias) -> Html Msg
 displayCurrentPlayer players = case (head players) of 
     Just player -> case player of 
-        Just p -> Html.text ("SET: 'Spiller " ++ (String.fromInt (p.id + 1)) ++ "'")
-        Nothing -> Html.text ""
-    Nothing -> Html.text ""
+        Just p -> 
+            Html.text ("SET: 'Spiller " ++ (String.fromInt (p.id + 1)) ++ "'")
+        Nothing -> 
+            Html.text ""
+    Nothing -> 
+        Html.text ""
 
 view : Model -> Html Msg
 view model =
