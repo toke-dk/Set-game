@@ -328,7 +328,7 @@ update msg model =
                     }
         ChangeReadyState state -> {model | isReady = state}
         AddAPlayer -> {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
-        ChangeCurrentPlayer player -> {model | currentPlayers = List.append model.currentPlayers [Just player]}
+        ChangeCurrentPlayer player -> {model | currentPlayers = List.append model.currentPlayers [Just player]} -- skal finde en bedre måde at tilføje til det bagerste element
 
 -- VIEW
 
