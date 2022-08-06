@@ -20,6 +20,9 @@ import List exposing (concatMap)
 import List exposing (take)
 import List exposing (drop)
 import List exposing (head)
+import Html exposing (Html, Attribute, div, input, text)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onInput)
 
 
 
@@ -130,7 +133,8 @@ type alias Model = {
     cardPile : List Card,
     isReady : Bool,
     totalPlayers : List PlayerAlias,
-    currentPlayers : List (Maybe PlayerAlias)
+    currentPlayers : List (Maybe PlayerAlias),
+    seed : Int
     }
 
 type alias PlayerAlias = {
@@ -146,7 +150,8 @@ init =
      cardPile = List.drop 12 (randomDeck 42),
      isReady = False,  
      totalPlayers = [{id = 0, points = 0}],
-     currentPlayers = []
+     currentPlayers = [],
+     seed = 0
     }
 
 fullDeck : List Card
@@ -177,6 +182,7 @@ type Msg
     | ChangeReadyState Bool
     | ChangeAmountOfPlayers Int
     | ChangeCurrentPlayer PlayerAlias
+    | SetSeed String
 
 changePointsFunction : Model -> Int -> Model
 changePointsFunction model points = 
@@ -328,7 +334,10 @@ update msg model =
                     model
                 False -> 
                     {model | currentPlayers = List.append model.currentPlayers [Just player]}
-                
+        SetSeed seed -> 
+            case (String.toInt seed) of
+                Just s -> {model | seed = s}
+                Nothing -> model    
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -432,6 +441,9 @@ view model =
                         , Html.p [][]
                         , Html.button [Events.onClick (ChangeAmountOfPlayers 1)][Html.text "+1"]
                         , Html.button [Events.onClick (ChangeAmountOfPlayers -1)][Html.text "-1"]
+                        , Html.p [][Html.text "Seed: "]
+                        , Html.input [onInput SetSeed][]
+                        , (Html.text (String.fromInt model.seed))
                         ],
                         Html.div [] [
                             Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
