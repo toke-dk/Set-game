@@ -134,7 +134,6 @@ type alias Model = {
     isReady : Bool,
     totalPlayers : List PlayerAlias,
     currentPlayers : List (Maybe PlayerAlias),
-    seed : Int,
     seedMsg : String 
     }
 
@@ -152,7 +151,6 @@ init =
      isReady = False,  
      totalPlayers = [{id = 0, points = 0}],
      currentPlayers = [],
-     seed = 0,
      seedMsg = ""
     }
 
@@ -320,8 +318,12 @@ update msg model =
                     cardPile = drop 3 model.cardPile
                     }
         ChangeReadyState state -> 
-            case (String.length model.seedMsg /= 0) of
-                True -> {model | isReady = state}
+            case (String.length model.seedMsg /= 0) of -- Hvis der er indtastet et seed
+                True -> 
+                    case (String.toInt model.seedMsg) of
+                        Just seedInt -> 
+                            {model | isReady = state, table = List.take 12 (randomDeck seedInt), cardPile = List.drop 12 (randomDeck seedInt)}
+                        Nothing -> model
                 False -> {model | errorMessage = "Vælg et seed!"}
         ChangeAmountOfPlayers amount -> 
             case (amount > 0) of -- Hvis man vil tilføje en spiller
@@ -446,7 +448,6 @@ view model =
                         , Html.p [][Html.text "Seed: "]
                         , Html.input [Attributes.type_ "number", value model.seedMsg, onInput SetSeed][]
                         , Html.p [] [Html.text model.errorMessage]
-                        , Html.text (String.fromInt model.seed)
                         ],
                         Html.div [] [
                             Html.button [Events.onClick (ChangeReadyState True)][Html.text "Klar til at spille!"]
