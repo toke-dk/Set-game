@@ -256,10 +256,12 @@ moreThanTwelve old model =
         False -> 
             {model | table = (listReplace (drop ((length model.table) - 3) model.table) old model.table)}
         True ->
-            {model | 
-            table =  listReplace (take 3 model.cardPile) (old) (model.table),
-            cardPile = drop 3 model.cardPile,
-            selection = []}
+            {
+                model | 
+                table =  listReplace (take 3 model.cardPile) (old) (model.table)
+                , cardPile = drop 3 model.cardPile
+                , selection = []
+            }
 
 
 listIsSet : List Card -> Bool
@@ -300,10 +302,19 @@ update msg model =
                                         x :: y :: rest ->
                                             case (isSet x y card) of
                                                 True -> --fjerner kort ved set
-                                                    moreThanTwelve [x,y,card] {model | selection = [], totalPlayers = (changePointsFunction model 1).totalPlayers, currentPlayers = []}
+                                                    moreThanTwelve [x,y,card] 
+                                                    {
+                                                        model | selection = []
+                                                        , totalPlayers = (changePointsFunction model 1).totalPlayers
+                                                        , currentPlayers = []
+                                                    }
 
                                                 False -> -- fjerne selection når der ikke er set
-                                                    {model | selection = [], totalPlayers = (changePointsFunction model -1).totalPlayers, currentPlayers = (List.drop 1 model.currentPlayers)}
+                                                    {
+                                                        model | selection = []
+                                                        , totalPlayers = (changePointsFunction model -1).totalPlayers
+                                                        , currentPlayers = (List.drop 1 model.currentPlayers)
+                                                    }
                                         rest ->
                                             model
                         True ->
@@ -313,16 +324,21 @@ update msg model =
                 True ->
                     model
                 False ->
-                    {model | 
-                    table =  List.append model.table (take 3 model.cardPile), 
-                    cardPile = drop 3 model.cardPile
+                    {
+                        model | 
+                        table =  List.append model.table (take 3 model.cardPile) 
+                        , cardPile = drop 3 model.cardPile
                     }
         ChangeReadyState state -> 
             case (String.length model.seedMsg /= 0) of -- Hvis der er indtastet et seed
                 True -> 
                     case (String.toInt model.seedMsg) of
                         Just seedInt -> 
-                            {model | isReady = state, table = List.take 12 (randomDeck seedInt), cardPile = List.drop 12 (randomDeck seedInt)}
+                            {
+                                model | isReady = state
+                                , table = List.take 12 (randomDeck seedInt)
+                                , cardPile = List.drop 12 (randomDeck seedInt)
+                            } -- den laver et nyt table og cardpile efter det nye seed
                         Nothing -> model
                 False -> {model | errorMessage = "Vælg et seed!"}
         ChangeAmountOfPlayers amount -> 
@@ -335,13 +351,13 @@ update msg model =
                             {model | totalPlayers = List.drop 1 model.totalPlayers}
                         False -> 
                             model
-        ChangeCurrentPlayer player -> 
-            case (List.member (Just player) model.currentPlayers) of 
+        ChangeCurrentPlayer player -> -- skifter turen i den der har trykket set
+            case (List.member (Just player) model.currentPlayers) of -- hvis spilleren allerede har trykket 
                 True -> 
                     model
                 False -> 
-                    {model | currentPlayers = List.append model.currentPlayers [Just player]}
-        SetSeed seedString -> {model | seedMsg = seedString}
+                    {model | currentPlayers = List.append model.currentPlayers [Just player]} -- tilføjer spilleren bagers i køen
+        SetSeed seedString -> {model | seedMsg = seedString} -- ændrer string hver gang man skriver i input-feltet
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -418,8 +434,9 @@ viewTable selection cards =
 
 displayPlayerInfo : PlayerAlias -> Html Msg
 displayPlayerInfo playerInfo = Html.div[] 
-    [Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)) ++ " ")
-    , (Html.button [Events.onClick (ChangeCurrentPlayer playerInfo)][Html.text "SET!"])
+    [
+        Html.text ("Spiller: " ++ (String.fromInt (playerInfo.id + 1)) ++ " Point: " ++ (String.fromInt (playerInfo.points)) ++ " ")
+        , (Html.button [Events.onClick (ChangeCurrentPlayer playerInfo)][Html.text "SET!"])
     ]
 
 displayCurrentPlayer : List (Maybe PlayerAlias) -> Html Msg
