@@ -23,7 +23,9 @@ import List exposing (head)
 import Html exposing (Html, Attribute, div, input, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
-
+import Json.Decode as Decode
+import Browser
+import Browser.Events exposing (onKeyPress)
 
 
 -- CARD (Denne sektion definerer Card typen)
@@ -142,9 +144,9 @@ type alias PlayerAlias = {
     points : Int
     }
 
-init : Model
-init =
-    { table = List.take 12 (randomDeck 42),
+init : () -> (Model, Cmd Msg)
+init _ =
+    ({ table = List.take 12 (randomDeck 42),
      selection = [],
      errorMessage = "",
      cardPile = List.drop 12 (randomDeck 42),
@@ -152,7 +154,7 @@ init =
      totalPlayers = [{id = 0, points = 0}],
      currentPlayers = [],
      seedMsg = ""
-    }
+    }, Cmd.none)
 
 fullDeck : List Card
 fullDeck =
@@ -183,6 +185,8 @@ type Msg
     | ChangeAmountOfPlayers Int
     | ChangeCurrentPlayer PlayerAlias
     | SetSeed String
+    | CharacterKey Char
+    | ControlKey String
 
 changePointsFunction : Model -> Int -> Model
 changePointsFunction model points = 
@@ -284,80 +288,82 @@ checkIfSet cards set =
                     False
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         Select card ->
             case (head model.currentPlayers) of
                 Nothing -> 
-                    model
+                    (model, Cmd.none)
                 Just currentPlayer ->
                     case (List.member card model.selection) of
                         False ->
                             case (length model.selection == 2) of
                                 False -> --0 eller 1 kort er valgt
-                                    {model | selection = card :: model.selection}
+                                    ({model | selection = card :: model.selection}, Cmd.none)
                                 True -> --2 kort er valgt
                                     case model.selection of
                                         x :: y :: rest ->
                                             case (isSet x y card) of
                                                 True -> --fjerner kort ved set
-                                                    moreThanTwelve [x,y,card] 
+                                                    (moreThanTwelve [x,y,card] 
                                                     {
                                                         model | selection = []
                                                         , totalPlayers = (changePointsFunction model 1).totalPlayers
                                                         , currentPlayers = []
-                                                    }
-
+                                                    }, Cmd.none)
                                                 False -> -- fjerne selection når der ikke er set
-                                                    {
+                                                    ({
                                                         model | selection = []
                                                         , totalPlayers = (changePointsFunction model -1).totalPlayers
                                                         , currentPlayers = (List.drop 1 model.currentPlayers)
-                                                    }
+                                                    }, Cmd.none)
                                         rest ->
-                                            model
+                                            (model, Cmd.none)
                         True ->
-                            {model | selection = (remove card model.selection)}
+                            ({model | selection = (remove card model.selection)}, Cmd.none)
         MoreCards ->
             case (checkIfSet model.table []) of
                 True ->
-                    model
+                    (model, Cmd.none)
                 False ->
-                    {
+                    ({
                         model | 
                         table =  List.append model.table (take 3 model.cardPile) 
                         , cardPile = drop 3 model.cardPile
-                    }
+                    }, Cmd.none)
         ChangeReadyState state -> 
             case (String.length model.seedMsg /= 0) of -- Hvis der er indtastet et seed
                 True -> 
                     case (String.toInt model.seedMsg) of
                         Just seedInt -> 
-                            {
+                            ({
                                 model | isReady = state
                                 , table = List.take 12 (randomDeck seedInt)
                                 , cardPile = List.drop 12 (randomDeck seedInt)
-                            } -- den laver et nyt table og cardpile efter det nye seed
-                        Nothing -> model
-                False -> {model | errorMessage = "Vælg et seed!"}
+                            }, Cmd.none) -- den laver et nyt table og cardpile efter det nye seed
+                        Nothing -> (model, Cmd.none)
+                False -> ({model | errorMessage = "Vælg et seed!"}, Cmd.none)
         ChangeAmountOfPlayers amount -> 
             case (amount > 0) of -- Hvis man vil tilføje en spiller
                 True -> 
-                    {model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }
+                    ({model | totalPlayers = {id = (List.length model.totalPlayers), points = 0} :: model.totalPlayers }, Cmd.none)
                 False -> -- Hvis man vil fjerne en spiller
                     case (List.length model.totalPlayers > 1) of -- Hvis der er mindst en spiller
                         True -> 
-                            {model | totalPlayers = List.drop 1 model.totalPlayers}
+                            ({model | totalPlayers = List.drop 1 model.totalPlayers}, Cmd.none)
                         False -> 
-                            model
+                            (model, Cmd.none)
         ChangeCurrentPlayer player -> -- skifter turen i den der har trykket set
             case (List.member (Just player) model.currentPlayers) of -- hvis spilleren allerede har trykket 
                 True -> 
-                    model
+                    (model, Cmd.none)
                 False -> 
-                    {model | currentPlayers = List.append model.currentPlayers [Just player]} -- tilføjer spilleren bagers i køen
-        SetSeed seedString -> {model | seedMsg = seedString} -- ændrer string hver gang man skriver i input-feltet
+                    ({model | currentPlayers = List.append model.currentPlayers [Just player]}, Cmd.none) -- tilføjer spilleren bagers i køen
+        SetSeed seedString -> ({model | seedMsg = seedString}, Cmd.none) -- ændrer string hver gang man skriver i input-feltet
+        CharacterKey '1' -> ({model | errorMessage = "fd"}, Cmd.none)
+        ControlKey "fdsa" -> (model, Cmd.none)
+        _ -> (model, Cmd.none)
 -- VIEW
 
 colorToClass : Color -> Attribute Msg
@@ -448,6 +454,21 @@ displayCurrentPlayer players = case (head players) of
             Html.text ""
     Nothing -> 
         Html.text ""
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    onKeyPress keyDecoder
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map toKey (Decode.field "key" Decode.string)
+
+toKey : String -> Msg
+toKey keyValue =
+    case String.uncons keyValue of
+        Just (char, "") ->
+            CharacterKey char
+        _ -> 
+            ControlKey keyValue
 
 view : Model -> Html Msg
 view model =
@@ -472,7 +493,9 @@ view model =
                         ]
                     ]
             True ->
-                Html.div []
+                Html.div [
+                    Events.on "keydown" keyDecoder
+                ]
                     [ Html.header []
                         [ Html.h3 []
                             [ Html.text "Mit eget SET-spil"
@@ -492,10 +515,11 @@ view model =
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
         , update = update
         , view = \model -> Html.div [] [ stylesheet, view model ]
+        , subscriptions = subscriptions
         }
 
 
